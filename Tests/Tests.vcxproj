@@ -127,15 +127,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="integer\Addition.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="TestDataFile.cpp" />
-    <ClCompile Include="TestGenerator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MpfrInclude.hpp" />
     <ClInclude Include="TestDataFile.hpp" />
-    <ClInclude Include="TestGenerator.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
