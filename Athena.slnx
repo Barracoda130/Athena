@@ -1,0 +1,9 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="Athena/Athena.vcxproj" Id="7348994c-afff-4f58-ab0b-68262504ff30" />
+  <Project Path="Sandbox/Sandbox.vcxproj" Id="5b961750-e364-455d-8c1c-dd18aea69c93" />
+  <Project Path="Tests/Tests.vcxproj" Id="d654bd1a-4cd1-42c4-a874-f6a12d261793" />
+</Solution>
