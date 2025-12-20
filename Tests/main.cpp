@@ -2,6 +2,6 @@
 
 int main( void )
 {
-	TestData::generateData(5);
+	TestData::generateData(100);
 	return 0;
 }
