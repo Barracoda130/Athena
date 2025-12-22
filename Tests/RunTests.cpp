@@ -1,6 +1,7 @@
 #include "RunTests.hpp"
 
 #include <iostream>
+#include "CppUnitTest.h"
 
 #include "TestDataFile.hpp"
 #include "MpfrInclude.hpp"
