@@ -15,18 +15,21 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Athena.cpp">
+    <ClCompile Include="TestDataFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Number.cpp">
+    <ClCompile Include="RunTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Athena.hpp">
+    <ClInclude Include="TestDataFile.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\MpfrInclude.hpp">
+    <ClInclude Include="common.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MpfrInclude.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

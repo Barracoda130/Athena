@@ -27,8 +27,13 @@ namespace TestData
 
 		~FileReader();
 
+		void reset( bool a_AFloating, sign_t a_ASign,
+					bool a_BFloating, sign_t a_BSign );
+
 		const char* getNextA();
 		const char* getNextB();
+
+		bool eofReached() { return m_EOFReached; };
 
 	private:
 		void readNextLine();
@@ -42,6 +47,8 @@ namespace TestData
 		bool m_BBeenRead;
 		std::string m_AData;
 		std::string m_BData;
+
+		bool m_EOFReached;
 
 	};
 }
