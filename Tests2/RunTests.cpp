@@ -5,6 +5,7 @@
 
 #include "TestDataFile.hpp"
 #include "MpfrInclude.hpp"
+#include "Athena.hpp"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -65,9 +66,9 @@ static std::string mpfr_tToStr( mpfr_t a_Num )
 	return result;
 }
 
-void runTest( TestData::FileReader& a_File, 
-			  std::function<void(mpfr_t, mpfr_t, mpfr_t, mpfr_rnd_t)> a_F1,
-			  std::function<long long( long long, long long )> a_F2 )
+void runTest( TestData::FileReader& a_File,
+			  std::function<void( mpfr_t, mpfr_t, mpfr_t, mpfr_rnd_t )> a_F1,
+			  std::function<void( Athena::Number&, const Athena::Number&, const Athena::Number&, Athena::round_t )> a_F2 )
 {
 	const char* n1 = a_File.getNextA();
 	const char* n2 = a_File.getNextB();
@@ -90,15 +91,54 @@ void runTest( TestData::FileReader& a_File,
 
 		long long n1Int = std::stoll( n1 );
 		long long n2Int = std::stoll( n2 );
+		Athena::Number n1Atna( n1Int, 512 );
+		Athena::Number n2Atna( n2Int, 512 );
+		Athena::Number resultAtna( 512 );
 
-		std::string myResult = std::to_string( a_F2(n1Int, n2Int) );
+		a_F2( resultAtna, n1Atna, n2Atna, Athena::RNDD );
 
-		Assert::AreEqual( mpfrResultString, myResult );
+		Assert::AreEqual( resultAtna == mpfrResult, true );
 
 		n1 = a_File.getNextA();
 		n2 = a_File.getNextB();
 	}
 }
+
+	
+void runTest( TestData::FileReader & a_File,
+				std::function<void( mpfr_t, mpfr_t, mpfr_t, mpfr_rnd_t )> a_F1,
+				std::function<long long( long long, long long )> a_F2 )
+{
+	const char* n1 = a_File.getNextA();
+	const char* n2 = a_File.getNextB();
+	while ( !a_File.eofReached() )
+	{
+		// Run through MPFR
+		mpfr_t mpfrResult;
+
+		mpfr_t num1, num2;
+		mpfr_init2( num1, 512 );
+		mpfr_init2( num2, 512 );
+		mpfr_init2( mpfrResult, 512 );
+
+		mpfr_set_str( num1, n1, 10, MPFR_RNDD );
+		mpfr_set_str( num2, n2, 10, MPFR_RNDD );
+
+		a_F1( mpfrResult, num1, num2, MPFR_RNDD );
+
+		std::string mpfrResultString = mpfr_tToStr( mpfrResult );
+
+		long long n1Int = std::stoll( n1 );
+		long long n2Int = std::stoll( n2 );
+		std::string longResult = std::to_string( a_F2(n1Int, n2Int) );
+
+		Assert::AreEqual( mpfrResultString, longResult );
+
+		n1 = a_File.getNextA();
+		n2 = a_File.getNextB();
+	}
+}
+
 
 namespace Integers
 {
@@ -124,27 +164,27 @@ namespace Integers
 		{
 			TestData::FileReader file( false, TestData::POSITIVE, false, TestData::POSITIVE );
 
-			runTest( file, mpfr_add, basicAdd );
+			runTest( file, mpfr_add, Athena::add );
 		}
 
 		TEST_METHOD( negative )
 		{
 			TestData::FileReader file( false, TestData::NEGATIVE, false, TestData::NEGATIVE );
 
-			runTest( file, mpfr_add, basicAdd );
+			runTest( file, mpfr_add, Athena::add );
 		}
 
 		TEST_METHOD( positiveAndNegative )
 		{
 			TestData::FileReader file( false, TestData::POSITIVE, false, TestData::NEGATIVE );
 
-			runTest( file, mpfr_add, basicAdd );
+			runTest( file, mpfr_add, Athena::add );
 
 			// Now run it with negative + positive rather than positive + negative
 			// to ensure both ways round work
 			file.reset( false, TestData::NEGATIVE, false, TestData::POSITIVE );
 
-			runTest( file, mpfr_add, basicAdd );
+			runTest( file, mpfr_add, Athena::add );
 		}
 	};
 
@@ -159,27 +199,27 @@ namespace Integers
 		{
 			TestData::FileReader file( false, TestData::POSITIVE, false, TestData::POSITIVE );
 
-			runTest( file, mpfr_sub, basicSub );
+			runTest( file, mpfr_sub, Athena::sub );
 		}
 
 		TEST_METHOD( negative )
 		{
 			TestData::FileReader file( false, TestData::NEGATIVE, false, TestData::NEGATIVE );
 
-			runTest( file, mpfr_sub, basicSub );
+			runTest( file, mpfr_sub, Athena::sub );
 		}
 
 		TEST_METHOD( positiveAndNegative )
 		{
 			TestData::FileReader file( false, TestData::POSITIVE, false, TestData::NEGATIVE );
 
-			runTest( file, mpfr_sub, basicSub );
+			runTest( file, mpfr_sub, Athena::sub );
 
 			// Now run it with negative + positive rather than positive + negative
 			// to ensure both ways round work
 			file.reset( false, TestData::NEGATIVE, false, TestData::POSITIVE );
 
-			runTest( file, mpfr_sub, basicSub );
+			runTest( file, mpfr_sub, Athena::sub );
 		}
 	};
 
@@ -194,27 +234,27 @@ namespace Integers
 		{
 			TestData::FileReader file( false, TestData::POSITIVE, false, TestData::POSITIVE );
 
-			runTest( file, mpfr_mul, basicMult );
+			runTest( file, mpfr_mul, Athena::mult );
 		}
 
 		TEST_METHOD( negative )
 		{
 			TestData::FileReader file( false, TestData::NEGATIVE, false, TestData::NEGATIVE );
 
-			runTest( file, mpfr_mul, basicMult );
+			runTest( file, mpfr_mul, Athena::mult );
 		}
 
 		TEST_METHOD( positiveAndNegative )
 		{
 			TestData::FileReader file( false, TestData::POSITIVE, false, TestData::NEGATIVE );
 
-			runTest( file, mpfr_mul, basicMult );
+			runTest( file, mpfr_mul, Athena::mult );
 
 			// Now run it with negative + positive rather than positive + negative
 			// to ensure both ways round work
 			file.reset( false, TestData::NEGATIVE, false, TestData::POSITIVE );
 
-			runTest( file, mpfr_mul, basicMult );
+			runTest( file, mpfr_mul, Athena::mult );
 		}
 	};
 
@@ -229,27 +269,27 @@ namespace Integers
 		{
 			TestData::FileReader file( false, TestData::POSITIVE, false, TestData::POSITIVE );
 
-			runTest( file, mpfr_div, basicSub );
+			runTest( file, mpfr_div, Athena::div );
 		}
 
 		TEST_METHOD( negative )
 		{
 			TestData::FileReader file( false, TestData::NEGATIVE, false, TestData::NEGATIVE );
 
-			runTest( file, mpfr_div, basicSub );
+			runTest( file, mpfr_div, Athena::div );
 		}
 
 		TEST_METHOD( positiveAndNegative )
 		{
 			TestData::FileReader file( false, TestData::POSITIVE, false, TestData::NEGATIVE );
 
-			runTest( file, mpfr_div, basicSub );
+			runTest( file, mpfr_div, Athena::div );
 
 			// Now run it with negative + positive rather than positive + negative
 			// to ensure both ways round work
 			file.reset( false, TestData::NEGATIVE, false, TestData::POSITIVE );
 
-			runTest( file, mpfr_div, basicSub );
+			runTest( file, mpfr_div, Athena::div );
 		}
 	};
 
