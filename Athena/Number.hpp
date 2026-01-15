@@ -2,11 +2,11 @@
 #include <vector>
 #include <string>
 #include "MpfrInclude.hpp"
+#include "StringMath.hpp"
 
 namespace Athena
 {
 	typedef long exponent_t;
-	enum sign_t {POSITIVE, NEGATIVE, NOT_A_NUMBER};		// The sign can be used to determine whether is a valid number or not
 	typedef std::size_t precision_t;
 	typedef unsigned long long mantissa_t;
 
@@ -30,7 +30,7 @@ namespace Athena
 
 		// Set methods will not adjust the precision of this number
 		void set( const Number& a_Value );
-		void set( const std::string& a_Value );
+		void set( const std::string& a_Value, round_t a_Round );
 		void set( const long long a_Value );
 
 		bool beenInitialised() const { return m_Precision > 0; };

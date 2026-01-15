@@ -4,20 +4,14 @@
 
 int main()
 {
-	Athena::testFunction();
+	std::string a("123");
+	std::string b( "456" );
 
-	//add();
-	std::cout << sizeof( unsigned long long ) << std::endl;
+	number_str_t n1 = toNumberStr( "123");
+	number_str_t n2 = toNumberStr( "456");
+	number_str_t n3 = strAdd( n1, n2 );
 
-	Athena::Number n1( 50, 100 );
-	Athena::Number n2( 60, 100 );
-	Athena::Number n3( 70, 100 );
-
-	add( n3, n1, n2, Athena::RNDA );
-
-	n1.set( n2 );
-
-	std::cout << "end" << std::endl;
+	std::cout << fromNumberStr( n3 ) << std::endl;
 
 	return 0;
 }
