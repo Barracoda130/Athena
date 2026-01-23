@@ -87,7 +87,7 @@ number_str_t strAdd( const number_str_t& a_N1, const number_str_t& a_N2 )
 				carry = 1;
 			}
 			else
-			{
+			{w
 				carry = 0;
 			}
 			result.data[i] = current;
