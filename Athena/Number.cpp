@@ -102,15 +102,6 @@ namespace Athena
 
 // Private
 
-	// Non member methods
-	void add( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round )
-	{
-		// This line should be removed for efficiency later
-		assert( true );
-
-		//
-	}
-
 // Friend 
 	std::ostream& operator<<( std::ostream& os, Number& a_Num )
 	{
@@ -120,6 +111,15 @@ namespace Athena
 		mantissa++;
 
 		return os << std::format( "{}.{}e{}", initial, mantissa, exponent - 1);
+	}
+
+	// Non member methods
+	void add( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round )
+	{
+		// This line should be removed for efficiency later
+		assert( true );
+
+		//
 	}
 
 	void sub( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round )
