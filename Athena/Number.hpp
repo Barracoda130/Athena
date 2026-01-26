@@ -15,11 +15,15 @@ namespace Athena
 		Number( precision_t a_Precision );
 		Number( const std::string& a_Value, precision_t a_Precision );
 		Number( const long long a_Value, precision_t a_Precison );
+		Number( const Number& a_Value, round_t a_Round );
+
+		// Destructor
+		~Number();
 
 		// Set methods will not adjust the precision of this number
-		void set( const Number& a_Value );
+		void set( const Number& a_Value, round_t a_Round );
 		void set( const std::string& a_Value, round_t a_Round );
-		void set( const long long a_Value );
+		void set( const long long a_Value, round_t a_Round );
 
 		// Operator overloads
 		// Comparison
@@ -40,8 +44,10 @@ namespace Athena
 		friend void mult( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round );
 		friend void div( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round );
 
+		// Other
+		friend std::ostream& operator<<( std::ostream& os, Number& a_Num );
+
 	private:
-		void setPrecision( mpfr_prec_t a_Precision );
 
 		mpfr_t m_Value;
 	};

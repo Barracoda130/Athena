@@ -1,12 +1,9 @@
 #include "Number.hpp"
 
 #include <cassert>
+#include <format>
+#include <iostream>
 #include "Common.hpp"
-
-namespace
-{
-	constexpr std::size_t mantissa_tBase10Length = 0;
-}
 
 namespace Athena
 {
@@ -18,6 +15,7 @@ namespace Athena
 	Number::Number( precision_t a_Precision )
 	{
 		// Maybe use macro in future: MPFR_DECL_INIT
+		// Will need to modify the destructor if i do this
 		mpfr_init2( m_Value, a_Precision );
 	}
 
@@ -29,12 +27,23 @@ namespace Athena
 
 	Number::Number( const long long a_Value, precision_t a_Precision )
 	{
-		setPrecision( a_Precision );
-		set( a_Value );
+		mpfr_init2( m_Value, a_Precision );
+		set( a_Value, MPFR_RNDN );
+	}
+
+	Number::Number( const Number& a_Value, round_t a_Round )
+	{
+		mpfr_init2( m_Value, mpfr_get_prec( a_Value.m_Value ) );
+		set( a_Value, a_Round );
+	}
+
+	Number::~Number()
+	{
+		mpfr_clear( m_Value );
 	}
 
 	// Set methods
-	void Number::set( const Number& a_Value )
+	void Number::set( const Number& a_Value, round_t a_Round )
 	{
 		mpfr_set( m_Value, a_Value.m_Value, MPFR_RNDN );
 	}
@@ -44,7 +53,7 @@ namespace Athena
 		mpfr_set_str( m_Value, a_Value.c_str(), 10, a_Round );
 	}
 
-	void Number::set( const long long a_Value )
+	void Number::set( const long long a_Value, round_t a_Round )
 	{
 		mpfr_set_uj( m_Value, static_cast<unsigned long>( a_Value ), MPFR_RNDN );
 	}
@@ -87,7 +96,7 @@ namespace Athena
 
 	Number& Number::operator=( Number& a_Other )
 	{
-		set( a_Other );
+		set( a_Other, MPFR_RNDN );
 		return *this;
 	}
 
@@ -97,9 +106,20 @@ namespace Athena
 	void add( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round )
 	{
 		// This line should be removed for efficiency later
-		assert( a_Result.beenInitialised() && a_Num1.beenInitialised() && a_Num2.beenInitialised() );
+		assert( true );
 
 		//
+	}
+
+// Friend 
+	std::ostream& operator<<( std::ostream& os, Number& a_Num )
+	{
+		mpfr_exp_t exponent;
+		char* mantissa = mpfr_get_str( nullptr, &exponent, 10, 0, a_Num.m_Value, MPFR_RNDN );
+		char initial = mantissa[0];
+		mantissa++;
+
+		return os << std::format( "{}.{}e{}", initial, mantissa, exponent - 1);
 	}
 
 	void sub( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round )
