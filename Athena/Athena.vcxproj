@@ -145,14 +145,12 @@
   <ItemGroup>
     <ClCompile Include="Athena.cpp" />
     <ClCompile Include="Number.cpp" />
-    <ClCompile Include="StringMath.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.hpp" />
     <ClInclude Include="Athena.hpp" />
     <ClInclude Include="MpfrInclude.hpp" />
     <ClInclude Include="Number.hpp" />
-    <ClInclude Include="StringMath.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
