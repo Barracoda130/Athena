@@ -60,38 +60,38 @@ namespace Athena
 
 	bool Number::operator==( const Number& a_Other ) const
 	{
-		return false;
+		return static_cast<bool>( mpfr_equal_p( m_Value, a_Other.m_Value ) );
 	}
 
 	// For testing
 	bool Number::operator==( const mpfr_t& a_Other ) const
 	{
-		return false;
+		return static_cast<bool>( mpfr_equal_p( m_Value, a_Other ) );
 	}
 
 	bool Number::operator!=( const Number& a_Other ) const
 	{
-		return false;
+		return !static_cast<bool>( mpfr_equal_p( m_Value, a_Other.m_Value ) );
 	}
 
 	bool Number::operator>( const Number& a_Other ) const
 	{
-		return false;
+		return static_cast<bool>( mpfr_greater_p( m_Value, a_Other.m_Value ) );
 	}
 
 	bool Number::operator<( const Number& a_Other ) const
 	{
-		return false;
+		return static_cast<bool>( mpfr_greater_p( a_Other.m_Value, m_Value ) );
 	}
 
 	bool Number::operator>=( const Number& a_Other ) const
 	{
-		return false;
+		return static_cast<bool>( mpfr_greaterequal_p( m_Value, a_Other.m_Value ) );
 	}
 
 	bool Number::operator<=( const Number& a_Other ) const
 	{
-		return false;
+		return static_cast<bool>( mpfr_greaterequal_p( a_Other.m_Value, m_Value ) );
 	}
 
 	Number& Number::operator=( Number& a_Other )
@@ -116,10 +116,7 @@ namespace Athena
 	// Non member methods
 	void add( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round )
 	{
-		// This line should be removed for efficiency later
-		assert( true );
-
-		//
+		
 	}
 
 	void sub( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round )
