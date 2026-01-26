@@ -12,23 +12,19 @@ namespace Athena
 {
 	Number::Number()
 	{
-		m_Precision = 0;
-		m_Exp = 0;
-		m_Sign = NOT_A_NUMBER;
-		
+		mpfr_init( m_Value );
 	}
 
 	Number::Number( precision_t a_Precision )
 	{
-		m_Exp = 0;
-		setPrecision( a_Precision );
-		m_Sign = NOT_A_NUMBER;
+		// Maybe use macro in future: MPFR_DECL_INIT
+		mpfr_init2( m_Value, a_Precision );
 	}
 
 	Number::Number( const std::string& a_Value, precision_t a_Precision )
 	{
-		setPrecision( a_Precision );
-		set( a_Value, RNDD );
+		mpfr_init2( m_Value, a_Precision );
+		set( a_Value, MPFR_RNDN );
 	}
 
 	Number::Number( const long long a_Value, precision_t a_Precision )
@@ -40,37 +36,17 @@ namespace Athena
 	// Set methods
 	void Number::set( const Number& a_Value )
 	{
-		m_Exp = a_Value.m_Exp;
-		m_Sign = a_Value.m_Sign;
-		m_Mantissa = a_Value.m_Mantissa;
+		mpfr_set( m_Value, a_Value.m_Value, MPFR_RNDN );
 	}
 
 	void Number::set( const std::string& a_Value, round_t a_Round )
 	{
-		// Temporary version!!
-		long long llValue = std::stoll( a_Value );
-		m_Exp = 0;
-		m_Sign = llValue >= 0 ? POSITIVE : NEGATIVE;
-		m_Mantissa[0] = static_cast<mantissa_t>(llValue);
-
-		// Initial slow version
-		m_Exp = static_cast<exponent_t>( a_Value.size() );
-		m_Sign = a_Value[0] == '-' ? NEGATIVE : POSITIVE;
-
-		// If the number is too large for the prevision we are allowed then remove the least significant bits
-		// We will fill right to left, but if the input number is larger than we can represent
-		// Then we will trim the string
-		for ( int pow = 0; ; pow++ )
-		{
-			index_t i = 0;
-		}
+		mpfr_set_str( m_Value, a_Value.c_str(), 10, a_Round );
 	}
 
 	void Number::set( const long long a_Value )
 	{
-		m_Exp = 0;
-		m_Sign = a_Value >= 0 ? POSITIVE : NEGATIVE;
-		m_Mantissa[0] = static_cast<mantissa_t>( a_Value );
+		mpfr_set_uj( m_Value, static_cast<unsigned long>( a_Value ), MPFR_RNDN );
 	}
 
 	bool Number::operator==( const Number& a_Other ) const
@@ -78,6 +54,7 @@ namespace Athena
 		return false;
 	}
 
+	// For testing
 	bool Number::operator==( const mpfr_t& a_Other ) const
 	{
 		return false;
@@ -115,16 +92,6 @@ namespace Athena
 	}
 
 // Private
-	void Number::setPrecision( precision_t a_Precision )
-	{
-		// Precision is given in bits
-		// Will always set precision to the nearest 
-		m_Precision = a_Precision;
-		std::size_t mantissaSizeBits = sizeof( mantissa_t ) * 8;
-
-
-		m_Mantissa.resize( a_Precision / mantissaSizeBits + 1 );
-	}
 
 	// Non member methods
 	void add( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round )
