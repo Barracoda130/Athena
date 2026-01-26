@@ -4,20 +4,11 @@
 
 int main()
 {
-	Athena::testFunction();
+	Athena::Number num1( "123", 256 );
+	Athena::Number num2( "9999999999999999999", 256 );
 
-	//add();
-	std::cout << sizeof( unsigned long long ) << std::endl;
-
-	Athena::Number n1( 50, 100 );
-	Athena::Number n2( 60, 100 );
-	Athena::Number n3( 70, 100 );
-
-	add( n3, n1, n2, Athena::RNDA );
-
-	n1.set( n2 );
-
-	std::cout << "end" << std::endl;
+	std::cout << "num1: " << num1 << std::endl;
+	std::cout << "num2: " << num2 << std::endl;
 
 	return 0;
 }

@@ -5,20 +5,8 @@
 
 namespace Athena
 {
-	typedef long exponent_t;
-	enum sign_t {POSITIVE, NEGATIVE, NOT_A_NUMBER};		// The sign can be used to determine whether is a valid number or not
-	typedef std::size_t precision_t;
-	typedef unsigned long long mantissa_t;
-
-	// Roundings are taken from MPFR
-	enum round_t
-	{
-		RNDD,	// Round down towards -infinity
-		RNDN,	// Round to the nearest value (up or down)
-		RNDU,	// Round up towards +infinity
-		RNDZ,	// Round towards zero (truncate)
-		RNDA	// Round away from zero
-	};
+	typedef mpfr_prec_t precision_t;
+	typedef mpfr_rnd_t round_t;
 
 	class Number
 	{
@@ -27,15 +15,15 @@ namespace Athena
 		Number( precision_t a_Precision );
 		Number( const std::string& a_Value, precision_t a_Precision );
 		Number( const long long a_Value, precision_t a_Precison );
+		Number( const Number& a_Value, round_t a_Round );
+
+		// Destructor
+		~Number();
 
 		// Set methods will not adjust the precision of this number
-		void set( const Number& a_Value );
-		void set( const std::string& a_Value );
-		void set( const long long a_Value );
-
-		bool beenInitialised() const { return m_Precision > 0; };
-
-		//const std::vector<mantissa_t>& getMantissa() const { return m_Mantissa; };
+		void set( const Number& a_Value, round_t a_Round );
+		void set( const std::string& a_Value, round_t a_Round );
+		void set( const long long a_Value, round_t a_Round );
 
 		// Operator overloads
 		// Comparison
@@ -56,13 +44,12 @@ namespace Athena
 		friend void mult( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round );
 		friend void div( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round );
 
-	private:
-		void setPrecision( precision_t a_Precision );
+		// Other
+		friend std::ostream& operator<<( std::ostream& os, Number& a_Num );
 
-		exponent_t m_Exp;
-		sign_t m_Sign;
-		precision_t m_Precision;
-		std::vector<mantissa_t> m_Mantissa;
+	private:
+
+		mpfr_t m_Value;
 	};
 
 	

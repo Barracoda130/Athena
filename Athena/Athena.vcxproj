@@ -143,12 +143,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Athena.cpp" />
-    <ClCompile Include="src\Number.cpp" />
+    <ClCompile Include="Athena.cpp" />
+    <ClCompile Include="Number.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Athena.hpp" />
-    <ClInclude Include="src\MpfrInclude.hpp" />
+    <ClInclude Include="Common.hpp" />
+    <ClInclude Include="Athena.hpp" />
+    <ClInclude Include="MpfrInclude.hpp" />
+    <ClInclude Include="Number.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

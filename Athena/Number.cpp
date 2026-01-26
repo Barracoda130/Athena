@@ -1,57 +1,61 @@
 #include "Number.hpp"
+
 #include <cassert>
+#include <format>
+#include <iostream>
+#include "Common.hpp"
 
 namespace Athena
 {
 	Number::Number()
 	{
-		m_Precision = 0;
-		m_Exp = 0;
-		m_Sign = NOT_A_NUMBER;
-		
+		mpfr_init( m_Value );
 	}
 
 	Number::Number( precision_t a_Precision )
 	{
-		m_Exp = 0;
-		setPrecision( a_Precision );
-		m_Sign = NOT_A_NUMBER;
+		// Maybe use macro in future: MPFR_DECL_INIT
+		// Will need to modify the destructor if i do this
+		mpfr_init2( m_Value, a_Precision );
 	}
 
 	Number::Number( const std::string& a_Value, precision_t a_Precision )
 	{
-		setPrecision( a_Precision );
-		set( a_Value );
+		mpfr_init2( m_Value, a_Precision );
+		set( a_Value, MPFR_RNDN );
 	}
 
 	Number::Number( const long long a_Value, precision_t a_Precision )
 	{
-		setPrecision( a_Precision );
-		set( a_Value );
+		mpfr_init2( m_Value, a_Precision );
+		set( a_Value, MPFR_RNDN );
+	}
+
+	Number::Number( const Number& a_Value, round_t a_Round )
+	{
+		mpfr_init2( m_Value, mpfr_get_prec( a_Value.m_Value ) );
+		set( a_Value, a_Round );
+	}
+
+	Number::~Number()
+	{
+		mpfr_clear( m_Value );
 	}
 
 	// Set methods
-	void Number::set( const Number& a_Value )
+	void Number::set( const Number& a_Value, round_t a_Round )
 	{
-		m_Exp = a_Value.m_Exp;
-		m_Sign = a_Value.m_Sign;
-		m_Mantissa = a_Value.m_Mantissa;
+		mpfr_set( m_Value, a_Value.m_Value, MPFR_RNDN );
 	}
 
-	void Number::set( const std::string& a_Value )
+	void Number::set( const std::string& a_Value, round_t a_Round )
 	{
-		// Temporary version!!
-		long long llValue = std::stoll( a_Value );
-		m_Exp = 0;
-		m_Sign = llValue >= 0 ? POSITIVE : NEGATIVE;
-		m_Mantissa[0] = static_cast<mantissa_t>(llValue);
+		mpfr_set_str( m_Value, a_Value.c_str(), 10, a_Round );
 	}
 
-	void Number::set( const long long a_Value )
+	void Number::set( const long long a_Value, round_t a_Round )
 	{
-		m_Exp = 0;
-		m_Sign = a_Value >= 0 ? POSITIVE : NEGATIVE;
-		m_Mantissa[0] = static_cast<mantissa_t>( a_Value );
+		mpfr_set_uj( m_Value, static_cast<unsigned long>( a_Value ), MPFR_RNDN );
 	}
 
 	bool Number::operator==( const Number& a_Other ) const
@@ -59,6 +63,7 @@ namespace Athena
 		return false;
 	}
 
+	// For testing
 	bool Number::operator==( const mpfr_t& a_Other ) const
 	{
 		return false;
@@ -91,30 +96,30 @@ namespace Athena
 
 	Number& Number::operator=( Number& a_Other )
 	{
-		set( a_Other );
+		set( a_Other, MPFR_RNDN );
 		return *this;
 	}
 
 // Private
-	void Number::setPrecision( precision_t a_Precision )
+
+// Friend 
+	std::ostream& operator<<( std::ostream& os, Number& a_Num )
 	{
-		// Precision is given in bits
-		// Will always set precision to the nearest 
-		m_Precision = a_Precision;
-		std::size_t mantissaSizeBits = sizeof( mantissa_t ) * 8;
+		mpfr_exp_t exponent;
+		char* mantissa = mpfr_get_str( nullptr, &exponent, 10, 0, a_Num.m_Value, MPFR_RNDN );
+		char initial = mantissa[0];
+		mantissa++;
 
-
-		m_Mantissa.resize( a_Precision / mantissaSizeBits + 1 );
+		return os << std::format( "{}.{}e{}", initial, mantissa, exponent - 1);
 	}
 
 	// Non member methods
 	void add( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round )
 	{
-		// NOT FINISHED
 		// This line should be removed for efficiency later
-		assert( a_Result.beenInitialised() && a_Num1.beenInitialised() && a_Num2.beenInitialised() );
+		assert( true );
 
-		a_Result.set( a_Num1.m_Mantissa[0] + a_Num2.m_Mantissa[0] );
+		//
 	}
 
 	void sub( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round )
