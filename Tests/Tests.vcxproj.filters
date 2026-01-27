@@ -15,18 +15,21 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="TestDataFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TestDataFile.cpp">
+    <ClCompile Include="RunTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MpfrInclude.hpp">
+    <ClInclude Include="TestDataFile.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TestDataFile.hpp">
+    <ClInclude Include="common.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MpfrInclude.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
