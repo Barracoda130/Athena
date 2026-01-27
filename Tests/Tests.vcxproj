@@ -22,7 +22,7 @@
     <VCProjectVersion>18.0</VCProjectVersion>
     <ProjectGuid>{56967941-17EC-8B18-3BFB-5A18EF21614C}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>Tests2</RootNamespace>
+    <RootNamespace>Tests</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectSubType>NativeUnitTestProject</ProjectSubType>
     <ProjectName>Tests</ProjectName>
