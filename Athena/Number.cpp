@@ -45,7 +45,7 @@ namespace Athena
 	// Set methods
 	void Number::set( const Number& a_Value, round_t a_Round )
 	{
-		mpfr_set( m_Value, a_Value.m_Value, MPFR_RNDN );
+		mpfr_set( m_Value, a_Value.m_Value, a_Round );
 	}
 
 	void Number::set( const std::string& a_Value, round_t a_Round )
@@ -55,43 +55,43 @@ namespace Athena
 
 	void Number::set( const long long a_Value, round_t a_Round )
 	{
-		mpfr_set_uj( m_Value, static_cast<unsigned long>( a_Value ), MPFR_RNDN );
+		mpfr_set_uj( m_Value, static_cast<unsigned long>( a_Value ), a_Round );
 	}
 
 	bool Number::operator==( const Number& a_Other ) const
 	{
-		return false;
+		return static_cast<bool>( mpfr_equal_p( m_Value, a_Other.m_Value ) );
 	}
 
 	// For testing
 	bool Number::operator==( const mpfr_t& a_Other ) const
 	{
-		return false;
+		return static_cast<bool>( mpfr_equal_p( m_Value, a_Other ) );
 	}
 
 	bool Number::operator!=( const Number& a_Other ) const
 	{
-		return false;
+		return !static_cast<bool>( mpfr_equal_p( m_Value, a_Other.m_Value ) );
 	}
 
 	bool Number::operator>( const Number& a_Other ) const
 	{
-		return false;
+		return static_cast<bool>( mpfr_greater_p( m_Value, a_Other.m_Value ) );
 	}
 
 	bool Number::operator<( const Number& a_Other ) const
 	{
-		return false;
+		return static_cast<bool>( mpfr_greater_p( a_Other.m_Value, m_Value ) );
 	}
 
 	bool Number::operator>=( const Number& a_Other ) const
 	{
-		return false;
+		return static_cast<bool>( mpfr_greaterequal_p( m_Value, a_Other.m_Value ) );
 	}
 
 	bool Number::operator<=( const Number& a_Other ) const
 	{
-		return false;
+		return static_cast<bool>( mpfr_greaterequal_p( a_Other.m_Value, m_Value ) );
 	}
 
 	Number& Number::operator=( Number& a_Other )
@@ -116,19 +116,22 @@ namespace Athena
 	// Non member methods
 	void add( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round )
 	{
-		// This line should be removed for efficiency later
-		assert( true );
-
-		//
+		mpfr_add( a_Result.m_Value, a_Num1.m_Value, a_Num2.m_Value, a_Round );
 	}
 
 	void sub( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round )
-	{}
+	{
+		mpfr_sub( a_Result.m_Value, a_Num1.m_Value, a_Num2.m_Value, a_Round );
+	}
 
-	void mult( Number & a_Result, const Number & a_Num1, const Number & a_Num2, round_t a_Round )
-	{}
+	void mul( Number & a_Result, const Number & a_Num1, const Number & a_Num2, round_t a_Round )
+	{
+		mpfr_mul( a_Result.m_Value, a_Num1.m_Value, a_Num2.m_Value, a_Round );
+	}
 
 	void div( Number & a_Result, const Number & a_Num1, const Number & a_Num2, round_t a_Round )
-	{}
+	{
+		mpfr_div( a_Result.m_Value, a_Num1.m_Value, a_Num2.m_Value, a_Round );
+	}
 
 }
