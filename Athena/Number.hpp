@@ -41,7 +41,7 @@ namespace Athena
 		// Friend methods
 		friend void add( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round );
 		friend void sub( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round );
-		friend void mult( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round );
+		friend void mul( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round );
 		friend void div( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round );
 
 		// Other

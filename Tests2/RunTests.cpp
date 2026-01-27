@@ -82,20 +82,16 @@ void runTest( TestData::FileReader& a_File,
 		mpfr_init2( num2, 512 );
 		mpfr_init2( mpfrResult, 512 );
 
-		mpfr_set_str( num1, n1, 10, MPFR_RNDD );
-		mpfr_set_str( num2, n2, 10, MPFR_RNDD );
+		mpfr_set_str( num1, n1, 10, MPFR_RNDN );
+		mpfr_set_str( num2, n2, 10, MPFR_RNDN );
 
 		a_F1( mpfrResult, num1, num2, MPFR_RNDD );
 
-		std::string mpfrResultString = mpfr_tToStr( mpfrResult );
-
-		long long n1Int = std::stoll( n1 );
-		long long n2Int = std::stoll( n2 );
-		Athena::Number n1Atna( n1Int, 512 );
-		Athena::Number n2Atna( n2Int, 512 );
+		Athena::Number n1Atna( n1, 512 );
+		Athena::Number n2Atna( n2, 512 );
 		Athena::Number resultAtna( 512 );
 
-		a_F2( resultAtna, n1Atna, n2Atna, Athena::RNDD );
+		a_F2( resultAtna, n1Atna, n2Atna, MPFR_RNDD );
 
 		Assert::AreEqual( resultAtna == mpfrResult, true );
 
@@ -234,27 +230,27 @@ namespace Integers
 		{
 			TestData::FileReader file( false, TestData::POSITIVE, false, TestData::POSITIVE );
 
-			runTest( file, mpfr_mul, Athena::mult );
+			runTest( file, mpfr_mul, Athena::mul );
 		}
 
 		TEST_METHOD( negative )
 		{
 			TestData::FileReader file( false, TestData::NEGATIVE, false, TestData::NEGATIVE );
 
-			runTest( file, mpfr_mul, Athena::mult );
+			runTest( file, mpfr_mul, Athena::mul );
 		}
 
 		TEST_METHOD( positiveAndNegative )
 		{
 			TestData::FileReader file( false, TestData::POSITIVE, false, TestData::NEGATIVE );
 
-			runTest( file, mpfr_mul, Athena::mult );
+			runTest( file, mpfr_mul, Athena::mul );
 
 			// Now run it with negative + positive rather than positive + negative
 			// to ensure both ways round work
 			file.reset( false, TestData::NEGATIVE, false, TestData::POSITIVE );
 
-			runTest( file, mpfr_mul, Athena::mult );
+			runTest( file, mpfr_mul, Athena::mul );
 		}
 	};
 
