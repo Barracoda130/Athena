@@ -4,9 +4,10 @@
 #include <string>
 #include <cstdlib>
 #include <cassert>
+#include <filesystem>
 
-#define MIN_NUM_LENGTH 10
-#define MAX_NUM_LENGTH 40
+#define MIN_NUM_LENGTH 2
+#define MAX_NUM_LENGTH 10
 
 namespace TestData
 {
@@ -149,6 +150,16 @@ namespace TestData
 	
 	FileReader::FileReader( bool a_AFloating, sign_t a_ASign, bool a_BFloating, sign_t a_BSign )
 	{
+		reset( a_AFloating, a_ASign, a_BFloating, a_BSign );
+	}
+
+	FileReader::~FileReader()
+	{
+		m_File.close();
+	}
+
+	void FileReader::reset( bool a_AFloating, sign_t a_ASign, bool a_BFloating, sign_t a_BSign )
+	{
 		m_ABeenRead = false;
 		m_BBeenRead = false;
 		m_ColAIdx = 0;
@@ -165,8 +176,8 @@ namespace TestData
 				m_ABeenRead = true;
 			}
 			else if ( !m_BBeenRead &&			// Not assigned yet
-					  currCol.isFloating == a_BFloating &&
-					  currCol.sign == a_BSign )
+				currCol.isFloating == a_BFloating &&
+				currCol.sign == a_BSign )
 			{
 				m_ColBIdx = i;
 				m_BBeenRead = true;
@@ -174,8 +185,10 @@ namespace TestData
 		}
 
 		assert( m_ColAIdx != m_ColBIdx &&	// They shouldn't be pointing to the same column
-				m_ColAIdx >= 0 &&			// They each should have a column
-				m_ColBIdx >= 0 );
+			m_ColAIdx >= 0 &&			// They each should have a column
+			m_ColBIdx >= 0 );
+
+		m_EOFReached = false;
 
 		m_File = std::ifstream( s_FileName );
 		m_CurrentRowIdx = 0;
@@ -184,15 +197,20 @@ namespace TestData
 		readNextLine();
 	}
 
-	FileReader::~FileReader()
-	{
-		m_File.close();
-	}
-
 	void FileReader::readNextLine()
 	{
+		if ( m_EOFReached )
+			return;
+
 		std::string buf;
-		getline( m_File, buf );
+		if ( !getline( m_File, buf ) )
+		{
+			m_EOFReached = true;
+			m_File.close();
+			m_AData = "";
+			m_BData = "";
+			return;
+		}
 
 		m_AData = getNthColumn( buf, m_ColAIdx );
 		m_BData = getNthColumn( buf, m_ColBIdx );
@@ -204,16 +222,20 @@ namespace TestData
 	const char* FileReader::getNextA()
 	{
 		// If This value has already been read get a new one
-		if ( m_ABeenRead )
+		if ( m_ABeenRead && !m_EOFReached )
 			readNextLine();
+
+		m_ABeenRead = true;
 		return m_AData.c_str();
 	}
 
 	const char* FileReader::getNextB()
 	{
 		// If This value has already been read get a new one
-		if ( m_BBeenRead )
+		if ( m_BBeenRead && !m_EOFReached )
 			readNextLine();
+
+		m_BBeenRead = true;
 		return m_BData.c_str();
 	}
 }

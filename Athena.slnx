@@ -5,5 +5,5 @@
   </Configurations>
   <Project Path="Athena/Athena.vcxproj" Id="7348994c-afff-4f58-ab0b-68262504ff30" />
   <Project Path="Sandbox/Sandbox.vcxproj" Id="5b961750-e364-455d-8c1c-dd18aea69c93" />
-  <Project Path="Tests2/Tests2.vcxproj" />
+  <Project Path="Tests/Tests.vcxproj" Id="56967941-17ec-8b18-3bfb-5a18ef21614c" />
 </Solution>
