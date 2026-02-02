@@ -145,6 +145,7 @@
   <ItemGroup>
     <ClCompile Include="Athena.cpp" />
     <ClCompile Include="Number.cpp" />
+    <ClCompile Include="NumberAdd.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.hpp" />
