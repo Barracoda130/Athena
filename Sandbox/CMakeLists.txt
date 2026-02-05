@@ -1,11 +1,10 @@
-﻿# CMakeList.txt : CMake project for Sandbox, include source and define
-# project specific logic here.
-#
+﻿pkg_check_modules(mpfr REQUIRED IMPORTED_TARGET mpfr)
 
-pkg_check_modules(mpfr REQUIRED IMPORTED_TARGET mpfr)
+include_directories("../Athena")
+include_directories("../Common")
 
 # Add source to this project's executable.
-add_executable (Sandbox "Sandbox.cpp" "Sandbox.h")
+add_executable (Sandbox "main.cpp" "MpfrInclude.hpp" "MpfrPlayground.cpp" "MpfrPlayground.hpp")
 
 target_link_libraries(Sandbox PRIVATE PkgConfig::mpfr)
 

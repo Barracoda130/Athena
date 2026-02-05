@@ -16,4 +16,4 @@ find_package(PkgConfig REQUIRED)
 
 # Include sub-projects.
 add_subdirectory ("Sandbox")
-
+add_subdirectory ("Tests")
