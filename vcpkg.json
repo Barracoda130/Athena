@@ -1,0 +1,8 @@
+{
+  "dependencies": [
+    "gmp",
+    "mpfr",
+    "pkgconf",
+    "catch2"
+  ]
+}

@@ -3,7 +3,7 @@
 #include <fstream>
 #include <string>
 
-#include "common.hpp"
+#include "Types.hpp"
 
 namespace TestData
 {
