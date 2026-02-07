@@ -9,6 +9,7 @@ target_sources(Athena
 		"Number.hpp"
 		"Number.cpp"
 		"Athena.cpp"
+		"NumberAdd.cpp"
 	PUBLIC
 		FILE_SET HEADERS
 		FILES
