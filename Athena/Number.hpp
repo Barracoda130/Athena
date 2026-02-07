@@ -52,5 +52,12 @@ namespace Athena
 		mpfr_t m_Value;
 	};
 
-	
+	// Namespace-scope declarations so callers can use Athena::add / sub / mul / div
+	void add( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round );
+	void sub( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round );
+	void mul( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round );
+	void div( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round );
+
+	// Namespace-scope declaration for the stream operator
+	std::ostream& operator<<( std::ostream& os, Number& a_Num );
 }

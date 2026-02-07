@@ -1,4 +1,4 @@
-#include "CppUnitTest.h"
+#include <catch2/catch_test_macros.hpp>
 
 #include <iostream>
 #include <functional>
@@ -7,7 +7,6 @@
 #include "MpfrInclude.hpp"
 #include "Athena.hpp"
 
-using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 
 
@@ -93,7 +92,7 @@ void runTest( TestData::FileReader& a_File,
 
 		a_F2( resultAtna, n1Atna, n2Atna, MPFR_RNDD );
 
-		Assert::AreEqual( resultAtna == mpfrResult, true );
+		REQUIRE( resultAtna == mpfrResult );
 
 		n1 = a_File.getNextA();
 		n2 = a_File.getNextB();
@@ -128,165 +127,177 @@ void runTest( TestData::FileReader & a_File,
 		long long n2Int = std::stoll( n2 );
 		std::string longResult = std::to_string( a_F2(n1Int, n2Int) );
 
-		Assert::AreEqual( mpfrResultString, longResult );
+		REQUIRE( mpfrResultString == longResult );
 
 		n1 = a_File.getNextA();
 		n2 = a_File.getNextB();
 	}
 }
 
-
-namespace Integers
+void initTest()
 {
-	// Runs once before all tests to ensure that the file has been created
-	TEST_MODULE_INITIALIZE( createTestData )
-	{
-		// Create a file reader, the read types don't matter
-		TestData::FileReader file( false, TestData::POSITIVE, false, TestData::POSITIVE );
+	// Create a file reader, the read types don't matter
+	TestData::FileReader file( false, TestData::POSITIVE, false, TestData::POSITIVE );
 
-		// If eof is reached then the FileReader class has already closed the file
-		// If the test data doesn't yet exist, generate it
-		if ( file.eofReached() )
-			TestData::generateData( 10 );
-	}
+	// If eof is reached then the FileReader class has already closed the file
+	// If the test data doesn't yet exist, generate it
+	if ( file.eofReached() )
+		TestData::generateData( 10 );
+}
 
-	TEST_CLASS( Addition )
-	{
-		static long long basicAdd( long long a_N1, long long a_N2 )
-		{
-			return a_N1 + a_N2;
-		}
-		TEST_METHOD( positive )
-		{
-			TestData::FileReader file( false, TestData::POSITIVE, false, TestData::POSITIVE );
+void cleanupTest() {}
 
-			runTest( file, mpfr_add, Athena::add );
-		}
+TEST_CASE("Positive Addition")
+{
+	initTest();
+	TestData::FileReader file( false, TestData::POSITIVE, false, TestData::POSITIVE );
+	runTest( file, mpfr_add, Athena::add );
+	cleanupTest();
+}
 
-		TEST_METHOD( negative )
-		{
-			TestData::FileReader file( false, TestData::NEGATIVE, false, TestData::NEGATIVE );
+TEST_CASE("Negative Addition")
+{
+	initTest();
+	TestData::FileReader file( false, TestData::NEGATIVE, false, TestData::NEGATIVE );
+	runTest( file, mpfr_add, Athena::add );
+	cleanupTest();
+}
 
-			runTest( file, mpfr_add, Athena::add );
-		}
+TEST_CASE( "Positive and Negative Addition" )
+{
+	initTest();
+	TestData::FileReader file( false, TestData::POSITIVE, false, TestData::NEGATIVE );
+	runTest( file, mpfr_add, Athena::add );
+	
+	// Now run it with negative + positive rather than positive + negative
+	// to ensure both ways round work
+	file.reset( false, TestData::NEGATIVE, false, TestData::POSITIVE );
+	
+	runTest( file, mpfr_add, Athena::add );
+	cleanupTest();
+}
 
-		TEST_METHOD( positiveAndNegative )
-		{
-			TestData::FileReader file( false, TestData::POSITIVE, false, TestData::NEGATIVE );
+TEST_CASE( "Random Addition" )
+{
+	initTest();
+	TestData::FileReader file( false, TestData::RANDOM, false, TestData::RANDOM );
+	runTest( file, mpfr_add, Athena::add );
+	cleanupTest();
+}
 
-			runTest( file, mpfr_add, Athena::add );
+// SUBTRACTION
+TEST_CASE( "Positive Subtraction" )
+{
+	initTest();
+	TestData::FileReader file( false, TestData::POSITIVE, false, TestData::POSITIVE );
+	runTest( file, mpfr_sub, Athena::sub );
+	cleanupTest();
+}
 
-			// Now run it with negative + positive rather than positive + negative
-			// to ensure both ways round work
-			file.reset( false, TestData::NEGATIVE, false, TestData::POSITIVE );
+TEST_CASE( "Negative Subtraction" )
+{
+	initTest();
+	TestData::FileReader file( false, TestData::NEGATIVE, false, TestData::NEGATIVE );
+	runTest( file, mpfr_sub, Athena::sub );
+	cleanupTest();
+}
 
-			runTest( file, mpfr_add, Athena::add );
-		}
-	};
+TEST_CASE( "Positive and Negative Subtraction" )
+{
+	initTest();
+	TestData::FileReader file( false, TestData::POSITIVE, false, TestData::NEGATIVE );
+	runTest( file, mpfr_sub, Athena::sub );
 
-	TEST_CLASS( Subtraction )
-	{
-		static long long basicSub( long long a_N1, long long a_N2 )
-		{
-			return a_N1 - a_N2;
-		}
+	// Now run it with negative + positive rather than positive + negative
+	// to ensure both ways round work
+	file.reset( false, TestData::NEGATIVE, false, TestData::POSITIVE );
 
-		TEST_METHOD( positive )
-		{
-			TestData::FileReader file( false, TestData::POSITIVE, false, TestData::POSITIVE );
+	runTest( file, mpfr_sub, Athena::sub );
+	cleanupTest();
+}
 
-			runTest( file, mpfr_sub, Athena::sub );
-		}
+TEST_CASE( "Random Subtraction" )
+{
+	initTest();
+	TestData::FileReader file( false, TestData::RANDOM, false, TestData::RANDOM );
+	runTest( file, mpfr_sub, Athena::sub );
+	cleanupTest();
+}
 
-		TEST_METHOD( negative )
-		{
-			TestData::FileReader file( false, TestData::NEGATIVE, false, TestData::NEGATIVE );
+// MULTIPLICATION
+TEST_CASE( "Positive Multiplication" )
+{
+	initTest();
+	TestData::FileReader file( false, TestData::POSITIVE, false, TestData::POSITIVE );
+	runTest( file, mpfr_mul, Athena::mul );
+	cleanupTest();
+}
 
-			runTest( file, mpfr_sub, Athena::sub );
-		}
+TEST_CASE( "Negative Multiplication" )
+{
+	initTest();
+	TestData::FileReader file( false, TestData::NEGATIVE, false, TestData::NEGATIVE );
+	runTest( file, mpfr_mul, Athena::mul );
+	cleanupTest();
+}
 
-		TEST_METHOD( positiveAndNegative )
-		{
-			TestData::FileReader file( false, TestData::POSITIVE, false, TestData::NEGATIVE );
+TEST_CASE( "Positive and Negative Multiplication" )
+{
+	initTest();
+	TestData::FileReader file( false, TestData::POSITIVE, false, TestData::NEGATIVE );
+	runTest( file, mpfr_mul, Athena::mul );
 
-			runTest( file, mpfr_sub, Athena::sub );
+	// Now run it with negative + positive rather than positive + negative
+	// to ensure both ways round work
+	file.reset( false, TestData::NEGATIVE, false, TestData::POSITIVE );
 
-			// Now run it with negative + positive rather than positive + negative
-			// to ensure both ways round work
-			file.reset( false, TestData::NEGATIVE, false, TestData::POSITIVE );
+	runTest( file, mpfr_mul, Athena::mul );
+	cleanupTest();
+}
 
-			runTest( file, mpfr_sub, Athena::sub );
-		}
-	};
+TEST_CASE( "Random Multiplication" )
+{
+	initTest();
+	TestData::FileReader file( false, TestData::RANDOM, false, TestData::RANDOM );
+	runTest( file, mpfr_mul, Athena::mul );
+	cleanupTest();
+}
 
-	TEST_CLASS( Multiplication )
-	{
-		static long long basicMult( long long a_N1, long long a_N2 )
-		{
-			return a_N1 * a_N2;
-		}
+// DIVISION
+TEST_CASE( "Positive Divison" )
+{
+	initTest();
+	TestData::FileReader file( false, TestData::POSITIVE, false, TestData::POSITIVE );
+	runTest( file, mpfr_div, Athena::div );
+	cleanupTest();
+}
 
-		TEST_METHOD( positive )
-		{
-			TestData::FileReader file( false, TestData::POSITIVE, false, TestData::POSITIVE );
+TEST_CASE( "Negative Divison" )
+{
+	initTest();
+	TestData::FileReader file( false, TestData::NEGATIVE, false, TestData::NEGATIVE );
+	runTest( file, mpfr_div, Athena::div );
+	cleanupTest();
+}
 
-			runTest( file, mpfr_mul, Athena::mul );
-		}
+TEST_CASE( "Positive and Negative Divison" )
+{
+	initTest();
+	TestData::FileReader file( false, TestData::POSITIVE, false, TestData::NEGATIVE );
+	runTest( file, mpfr_div, Athena::div );
 
-		TEST_METHOD( negative )
-		{
-			TestData::FileReader file( false, TestData::NEGATIVE, false, TestData::NEGATIVE );
+	// Now run it with negative + positive rather than positive + negative
+	// to ensure both ways round work
+	file.reset( false, TestData::NEGATIVE, false, TestData::POSITIVE );
 
-			runTest( file, mpfr_mul, Athena::mul );
-		}
+	runTest( file, mpfr_div, Athena::div );
+	cleanupTest();
+}
 
-		TEST_METHOD( positiveAndNegative )
-		{
-			TestData::FileReader file( false, TestData::POSITIVE, false, TestData::NEGATIVE );
-
-			runTest( file, mpfr_mul, Athena::mul );
-
-			// Now run it with negative + positive rather than positive + negative
-			// to ensure both ways round work
-			file.reset( false, TestData::NEGATIVE, false, TestData::POSITIVE );
-
-			runTest( file, mpfr_mul, Athena::mul );
-		}
-	};
-
-	TEST_CLASS( Division )
-	{
-		static long long basicSub( long long a_N1, long long a_N2 )
-		{
-			return a_N1 - a_N2;
-		}
-
-		TEST_METHOD( positive )
-		{
-			TestData::FileReader file( false, TestData::POSITIVE, false, TestData::POSITIVE );
-
-			runTest( file, mpfr_div, Athena::div );
-		}
-
-		TEST_METHOD( negative )
-		{
-			TestData::FileReader file( false, TestData::NEGATIVE, false, TestData::NEGATIVE );
-
-			runTest( file, mpfr_div, Athena::div );
-		}
-
-		TEST_METHOD( positiveAndNegative )
-		{
-			TestData::FileReader file( false, TestData::POSITIVE, false, TestData::NEGATIVE );
-
-			runTest( file, mpfr_div, Athena::div );
-
-			// Now run it with negative + positive rather than positive + negative
-			// to ensure both ways round work
-			file.reset( false, TestData::NEGATIVE, false, TestData::POSITIVE );
-
-			runTest( file, mpfr_div, Athena::div );
-		}
-	};
-
+TEST_CASE( "Random Divison" )
+{
+	initTest();
+	TestData::FileReader file( false, TestData::RANDOM, false, TestData::RANDOM );
+	runTest( file, mpfr_div, Athena::div );
+	cleanupTest();
 }
