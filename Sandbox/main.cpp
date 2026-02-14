@@ -27,5 +27,7 @@ int main()
 	std::cout << "mpfr_equal_p result: " << eq << std::endl;
 	std::cout << "eq " << ( mpfr_r == result ) << std::endl;
 
+	add();
+
 	return 0;
 }

@@ -7,6 +7,10 @@ namespace Athena
 {
 	typedef mpfr_prec_t precision_t;
 	typedef mpfr_rnd_t round_t;
+	typedef mpfr_exp_t exponent_t;
+	typedef mp_limb_t limb_t;
+	typedef mpfr_sign_t sign_t;
+	
 
 	class Number
 	{
@@ -48,6 +52,11 @@ namespace Athena
 		friend std::ostream& operator<<( std::ostream& os, Number& a_Num );
 
 	private:
+		exponent_t getExp() const { return m_Value->_mpfr_exp; };
+		precision_t getPrec() const { return m_Value->_mpfr_prec; };
+		sign_t getSign() const { return m_Value->_mpfr_sign; };
+		const limb_t *getLimbs() const { return m_Value->_mpfr_d; };
+		limb_t* getLimbs() { return m_Value->_mpfr_d; };
 
 		mpfr_t m_Value;
 	};
