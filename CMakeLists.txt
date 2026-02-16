@@ -13,6 +13,7 @@ endif()
 
 project("Athena")
 # vcpkg toolchain provided by CMAKE_TOOLCHAIN_FILE via CMakeUserPresets.json
+include("$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
 find_package(PkgConfig REQUIRED)
 include_directories("Common")
 
