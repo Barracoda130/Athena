@@ -365,3 +365,6 @@ FodyWeavers.xsd
 # Custom
 *.csv
 out/
+CMakeUserPresets.json
+build/
+vcpkg_installed/
