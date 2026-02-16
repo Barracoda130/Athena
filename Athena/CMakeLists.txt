@@ -1,5 +1,7 @@
 pkg_check_modules(mpfr REQUIRED IMPORTED_TARGET mpfr)
 
+include_directories("../Common")
+include_directories("mpfr-required")
 
 add_library(Athena)
 
