@@ -11,10 +11,9 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
-project ("Athena")
-include("D:/Programs/vcpkg/scripts/buildsystems/vcpkg.cmake")
+project("Athena")
+# vcpkg toolchain provided by CMAKE_TOOLCHAIN_FILE via CMakeUserPresets.json
 find_package(PkgConfig REQUIRED)
-
 include_directories("Common")
 
 # Include sub-projects.
