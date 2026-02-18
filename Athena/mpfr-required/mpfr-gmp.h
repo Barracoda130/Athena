@@ -30,4 +30,6 @@ mpfr_assert_fail( const char* filename, int linenum,
     }                                                                 \
   while (0)
 
+#define TMP_ALLOC(n) alloca (n)
+
 #endif

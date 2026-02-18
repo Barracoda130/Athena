@@ -4,7 +4,7 @@
 
 int main()
 {
-	Athena::Number num1( "123", 256 );
+	Athena::Number num1( "1234523412353421", 256 );
 	Athena::Number num2( "9999999999999999999", 256 );
 
 	Athena::Number result( 256 );
