@@ -1,4 +1,7 @@
+#define CATCH_CONFIG_RUNNER
+
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_session.hpp>
 
 #include <iostream>
 #include <functional>
@@ -311,4 +314,18 @@ TEST_CASE( "Random Divison" )
 	TestData::FileReader file( false, TestData::RANDOM, false, TestData::RANDOM );
 	runTest( file, mpfr_div, Athena::div );
 	cleanupTest();
+}
+
+int main( int argc, char* argv[] )
+{
+    Catch::Session session;
+    
+    // Override command line to run specific test
+    //const char* customArgs[] = { argv[0], "Positive Addition" };
+    int returnCode = session.applyCommandLine( 1, argv );
+    if ( returnCode != 0 )
+        return returnCode;
+
+    returnCode = session.run();
+    return returnCode;
 }
