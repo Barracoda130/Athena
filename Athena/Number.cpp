@@ -62,6 +62,21 @@ namespace Athena
 	{
 		mpfr_set_uj( m_Value, static_cast<unsigned long>( a_Value ), a_Round );
 	}
+	 
+	std::string Number::str() const
+	{
+		mpfr_exp_t exponent;
+		char* mantissa = mpfr_get_str( nullptr, &exponent, 10, 0, m_Value, MPFR_RNDN );
+		char initial = mantissa[0];
+		mantissa++;
+		if ( initial == '-' )
+		{
+			initial = mantissa[0];
+			mantissa++;
+			return std::format( "-{}.{}e{}", initial, mantissa, exponent - 1 );
+		}
+		return std::format( "{}.{}e{}", initial, mantissa, exponent - 1 );
+	}
 
 	bool Number::operator==( const Number& a_Other ) const
 	{
@@ -116,12 +131,7 @@ namespace Athena
 // Friend 
 	std::ostream& operator<<( std::ostream& os, const Number& a_Num )
 	{
-		mpfr_exp_t exponent;
-		char* mantissa = mpfr_get_str( nullptr, &exponent, 10, 0, a_Num.m_Value, MPFR_RNDN );
-		char initial = mantissa[0];
-		mantissa++;
-
-		return os << std::format( "{}.{}e{}", initial, mantissa, exponent - 1);
+		return os << a_Num.str();
 	}
 
 	// Non member methods

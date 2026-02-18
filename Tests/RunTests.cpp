@@ -2,12 +2,13 @@
 
 #include <iostream>
 #include <functional>
+#include <format>
 
 #include "TestDataFile.hpp"
 #include "MpfrInclude.hpp"
 #include "Athena.hpp"
 
-
+#define TEST_PRECISION 512
 
 
 static std::string mpfr_tToStr( mpfr_t a_Num )
@@ -77,22 +78,32 @@ void runTest( TestData::FileReader& a_File,
 		mpfr_t mpfrResult;
 
 		mpfr_t num1, num2;
-		mpfr_init2( num1, 512 );
-		mpfr_init2( num2, 512 );
-		mpfr_init2( mpfrResult, 512 );
+		mpfr_init2( num1, TEST_PRECISION );
+		mpfr_init2( num2, TEST_PRECISION );
+		mpfr_init2( mpfrResult, TEST_PRECISION );
 
 		mpfr_set_str( num1, n1, 10, MPFR_RNDN );
 		mpfr_set_str( num2, n2, 10, MPFR_RNDN );
 
 		a_F1( mpfrResult, num1, num2, MPFR_RNDD );
 
-		Athena::Number n1Atna( n1, 512 );
-		Athena::Number n2Atna( n2, 512 );
-		Athena::Number resultAtna( 512 );
+		Athena::Number n1Atna( n1, TEST_PRECISION );
+		Athena::Number n2Atna( n2, TEST_PRECISION );
+		Athena::Number resultAtna( TEST_PRECISION );
 
 		a_F2( resultAtna, n1Atna, n2Atna, MPFR_RNDD );
 
-		REQUIRE( resultAtna == mpfrResult );
+		if ( resultAtna == Athena::Number( mpfrResult, MPFR_RNDN ) )
+			SUCCEED();
+		else
+		{
+			INFO( std::format( "{}\n{}\nMPFR: {}\n ATNA: {}", 
+				Athena::Number(n1, TEST_PRECISION ).str(),
+				Athena::Number(n2, TEST_PRECISION ).str(),
+				Athena::Number( mpfrResult, MPFR_RNDN ).str(),
+				resultAtna.str() ) );
+			FAIL();
+		}
 
 		n1 = a_File.getNextA();
 		n2 = a_File.getNextB();
@@ -112,9 +123,9 @@ void runTest( TestData::FileReader & a_File,
 		mpfr_t mpfrResult;
 
 		mpfr_t num1, num2;
-		mpfr_init2( num1, 512 );
-		mpfr_init2( num2, 512 );
-		mpfr_init2( mpfrResult, 512 );
+		mpfr_init2( num1, TEST_PRECISION );
+		mpfr_init2( num2, TEST_PRECISION );
+		mpfr_init2( mpfrResult, TEST_PRECISION );
 
 		mpfr_set_str( num1, n1, 10, MPFR_RNDD );
 		mpfr_set_str( num2, n2, 10, MPFR_RNDD );

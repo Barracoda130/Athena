@@ -4,8 +4,8 @@
 
 int main()
 {
-	Athena::Number num1( "1234523412353421", 256 );
-	Athena::Number num2( "9999999999999999999", 256 );
+	Athena::Number num1( "-12", 256 );
+	Athena::Number num2( "13", 256 );
 
 	Athena::Number result( 256 );
 	add( result, num1, num2, MPFR_RNDN );
@@ -26,6 +26,7 @@ int main()
 	bool eq = static_cast<bool>( mpfr_equal_p( a, b ) );
 	std::cout << "mpfr_equal_p result: " << eq << std::endl;
 	std::cout << "eq " << ( mpfr_r == result ) << std::endl;
+	std::cout << a << std::endl;
 
 	add();
 

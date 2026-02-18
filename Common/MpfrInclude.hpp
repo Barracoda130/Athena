@@ -10,3 +10,6 @@
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
+
+
+std::ostream& operator<<( std::ostream& os, const mpfr_t a_Num );

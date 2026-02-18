@@ -12,6 +12,10 @@ if (POLICY CMP0141)
 endif()
 
 project("Athena")
+
+file(GLOB COMMON_SRC "${CMAKE_SOURCE_DIR}/Common/*.cpp")
+file(GLOB COMMON_HDR "${CMAKE_SOURCE_DIR}/Common/*.hpp")
+
 # vcpkg toolchain provided by CMAKE_TOOLCHAIN_FILE via CMakeUserPresets.json
 include("$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
 find_package(PkgConfig REQUIRED)

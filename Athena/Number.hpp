@@ -31,6 +31,8 @@ namespace Athena
 		void set( const std::string& a_Value, round_t a_Round );
 		void set( const long long a_Value, round_t a_Round );
 
+		std::string str() const;
+
 		// Operator overloads
 		// Comparison
 		bool operator== ( const mpfr_t& a_Other ) const;	// Used for testing

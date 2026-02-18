@@ -18,6 +18,8 @@ target_sources(Athena
         "NumberAdd.cpp"
         ${MPFR_SRCS}
         ${MPFR_HDRS}
+        ${COMMON_SRC}
+        ${COMMON_HDR}
     PUBLIC
         FILE_SET HEADERS
         FILES
