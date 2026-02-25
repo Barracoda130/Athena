@@ -34,7 +34,7 @@ int main()
 	//Athena::benchmark_add_n_implementations();
 
 	// Custom parameters
-	Athena::benchmark_add_n_implementations( 50, 100000 );
+	Athena::benchmark_add_n_implementations( 100, 100000 );
 	return 0;
 
 	return 0;

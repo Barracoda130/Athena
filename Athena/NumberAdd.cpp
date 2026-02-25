@@ -1124,6 +1124,21 @@ namespace Athena
         std::cout << "Limb count: " << limbCount << std::endl;
         std::cout << "Iterations: " << iterations << std::endl;
         std::cout << "Limb size: " << GMP_NUMB_BITS << " bits" << std::endl;
+
+        // Show build configuration
+#ifdef NDEBUG
+        std::cout << "Build: RELEASE (optimized)" << std::endl;
+#else
+        std::cout << "Build: DEBUG (not optimized)" << std::endl;
+#endif
+
+#if defined(_MSC_VER)
+        std::cout << "Compiler: MSVC " << _MSC_VER << std::endl;
+#elif defined(__GNUC__)
+        std::cout << "Compiler: GCC " << __GNUC__ << "." << __GNUC_MINOR__ << std::endl;
+#elif defined(__clang__)
+        std::cout << "Compiler: Clang " << __clang_major__ << "." << __clang_minor__ << std::endl;
+#endif
         std::cout << std::endl;
 
         auto result_standard = benchmark_function( [&]()

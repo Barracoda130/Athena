@@ -91,3 +91,42 @@ Correctness: Both implementations produce the same carry value.
 5. **Compiler Intrinsics**: The intrinsic version uses:
    - MSVC: `_addcarry_u64` / `_addcarry_u32`
    - GCC/Clang: `__builtin_add_overflow`
+
+## Enabling Optimizations
+
+### Quick Method (Visual Studio):
+1. Change configuration dropdown to **`x64-release`**
+2. Build solution
+
+### Command Line:
+```sh
+# Configure for release
+cmake --preset x64-release
+
+# Build
+cmake --build out/build/x64-release --config Release
+```
+
+### Optimization Flags Applied:
+**MSVC (Release):**
+- `/O2` - Maximum optimization (speed)
+- `/Ob2` - Inline function expansion
+- `/Oi` - Enable intrinsic functions
+- `/Ot` - Favor fast code
+- `/GL` - Whole program optimization
+- `/LTCG` - Link-time code generation
+- `/arch:AVX2` - AVX2 instructions (if supported)
+
+**GCC/Clang (Release):**
+- `-O3` - Aggressive optimizations
+- `-march=native` - Optimize for your CPU
+- `-DNDEBUG` - Disable assertions
+
+### Verify Optimizations:
+Run the benchmark - it will show:
+```
+Build: RELEASE (optimized)
+Compiler: MSVC 1930
+```
+
+If it shows "DEBUG (not optimized)", you're not building in Release mode.
