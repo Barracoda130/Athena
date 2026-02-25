@@ -4,8 +4,10 @@
         {
             "name": "default",
             "inherits": "vcpkg",
+            "displayName": "Default configure",
+            "hidden": false,
             "environment": {
-                "VCPKG_ROOT": "D:/Programs/vcpkg"
+                "VCPKG_ROOT": "C:/Program Files/Microsoft Visual Studio/18/Insiders/VC/vcpkg"
             }
         }
     ]

@@ -11,7 +11,9 @@ target_sources(Tests
 	PRIVATE
 		"RunTests.cpp"
 		"TestDataFile.cpp"
-		"TestDataFile.hpp")
+		"TestDataFile.hpp"
+		${COMMON_SRC}
+        ${COMMON_HDR} )
 
 target_sources(Catch2Sandbox
 	PRIVATE
