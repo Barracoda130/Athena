@@ -2,6 +2,9 @@
 
 #include <cassert>
 #include <iostream>
+#include <chrono>
+#include <random>
+#include <iomanip>
 
 #include "mpfr-impl.h"
 
@@ -254,8 +257,8 @@ namespace
 
             /* add b to a */
             cc = MPFR_UNLIKELY( an > bn )
-                ? mpn_add_n( ap + (an - bn), ap + (an - bn), bp, bn )
-                : mpn_add_n( ap, ap, bp + (bn - an), an );
+                ? atn_add_n( ap + (an - bn), ap + (an - bn), bp, bn )
+                : atn_add_n( ap, ap, bp + (bn - an), an );
 
             if ( MPFR_UNLIKELY( cc ) ) /* carry */
             {
@@ -673,7 +676,7 @@ namespace
             DEBUG( mpfr_print_mant_binary( "B= ", MPFR_MANT( b ), p ) );
             bx++;                                /* exp + 1 */
             ap = MPFR_MANT( a );
-            limb = mpn_add_n( ap, MPFR_MANT( b ), MPFR_MANT( c ), n );
+            limb = atn_add_n_intrinsic( ap, MPFR_MANT( b ), MPFR_MANT( c ), n );
             DEBUG( mpfr_print_mant_binary( "A= ", ap, p ) );
             MPFR_ASSERTD( limb != 0 );             /* There must be a carry */
             limb = ap[0];                        /* Get LSB (In fact, LSW) */
@@ -871,7 +874,7 @@ namespace
 
             /* Add the mantissa c from b in a */
             ap = MPFR_MANT( a );
-            limb = mpn_add_n( ap, MPFR_MANT( b ), cp, n );
+            limb = atn_add_n_intrinsic( ap, MPFR_MANT( b ), cp, n );
             DEBUG( mpfr_print_mant_binary( "Add=  ", ap, p ) );
 
             /* Check for overflow */
@@ -1050,9 +1053,9 @@ namespace Athena
             if ( MPFR_LIKELY( MPFR_PREC( a ) == MPFR_PREC( b )
                               && MPFR_PREC( b ) == MPFR_PREC( c ) ) )
                 if ( MPFR_GET_EXP( b ) < MPFR_GET_EXP( c ) )
-                    return mpfr_add1sp( a, c, b, rnd_mode );
+                    return atn_add1sp( a, c, b, rnd_mode );
                 else
-                    return mpfr_add1sp( a, b, c, rnd_mode );
+                    return atn_add1sp( a, b, c, rnd_mode );
             else
                 if ( MPFR_GET_EXP( b ) < MPFR_GET_EXP( c ) )
                     return atn_add1( a, c, b, rnd_mode );
@@ -1065,4 +1068,113 @@ namespace Athena
     {
         atn_add( a_Result.m_Value, a_Num1.m_Value, a_Num2.m_Value, a_Round );
     }
+
+    struct BenchmarkResult
+    {
+        double avgTimeNanoseconds;
+        double minTimeNanoseconds;
+        double maxTimeNanoseconds;
+        size_t iterations;
+    };
+
+    namespace
+    {
+        template<typename Func>
+        BenchmarkResult benchmark_function( Func func, size_t iterations )
+        {
+            BenchmarkResult result{ 0.0, std::numeric_limits<double>::max(), 0.0, iterations };
+            double totalTime = 0.0;
+
+            for ( size_t i = 0; i < iterations; ++i )
+            {
+                auto start = std::chrono::high_resolution_clock::now();
+                func();
+                auto end = std::chrono::high_resolution_clock::now();
+
+                auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>( end - start ).count();
+                double timeNs = static_cast<double>( duration );
+
+                totalTime += timeNs;
+                result.minTimeNanoseconds = std::min( result.minTimeNanoseconds, timeNs );
+                result.maxTimeNanoseconds = std::max( result.maxTimeNanoseconds, timeNs );
+            }
+
+            result.avgTimeNanoseconds = totalTime / iterations;
+            return result;
+        }
+    }
+
+    void benchmark_add_n_implementations( size_t limbCount, size_t iterations )
+    {
+        std::random_device rd;
+        std::mt19937_64 gen( rd() );
+        std::uniform_int_distribution<mp_limb_t> dist;
+
+        std::vector<mp_limb_t> a( limbCount );
+        std::vector<mp_limb_t> b( limbCount );
+        std::vector<mp_limb_t> result( limbCount );
+
+        for ( size_t i = 0; i < limbCount; ++i )
+        {
+            a[i] = dist( gen );
+            b[i] = dist( gen );
+        }
+
+        std::cout << "=== Benchmarking atn_add_n implementations ===" << std::endl;
+        std::cout << "Limb count: " << limbCount << std::endl;
+        std::cout << "Iterations: " << iterations << std::endl;
+        std::cout << "Limb size: " << GMP_NUMB_BITS << " bits" << std::endl;
+        std::cout << std::endl;
+
+        auto result_standard = benchmark_function( [&]()
+            {
+                atn_add_n( result.data(), a.data(), b.data(), limbCount );
+            }, iterations );
+
+        std::cout << "atn_add_n (standard):" << std::endl;
+        std::cout << "  Average: " << result_standard.avgTimeNanoseconds << " ns" << std::endl;
+        std::cout << "  Min:     " << result_standard.minTimeNanoseconds << " ns" << std::endl;
+        std::cout << "  Max:     " << result_standard.maxTimeNanoseconds << " ns" << std::endl;
+        std::cout << std::endl;
+
+        auto result_intrinsic = benchmark_function( [&]()
+            {
+                atn_add_n_intrinsic( result.data(), a.data(), b.data(), limbCount );
+            }, iterations );
+
+        std::cout << "atn_add_n_intrinsic:" << std::endl;
+        std::cout << "  Average: " << result_intrinsic.avgTimeNanoseconds << " ns" << std::endl;
+        std::cout << "  Min:     " << result_intrinsic.minTimeNanoseconds << " ns" << std::endl;
+        std::cout << "  Max:     " << result_intrinsic.maxTimeNanoseconds << " ns" << std::endl;
+        std::cout << std::endl;
+
+        double speedup = result_standard.avgTimeNanoseconds / result_intrinsic.avgTimeNanoseconds;
+        std::cout << "Performance comparison:" << std::endl;
+        if ( speedup > 1.0 )
+        {
+            std::cout << "  Intrinsic version is " << std::fixed << std::setprecision( 2 ) << speedup << "x faster" << std::endl;
+            std::cout << "  Speedup: " << std::fixed << std::setprecision( 1 ) << ((speedup - 1.0) * 100.0) << "%" << std::endl;
+        }
+        else
+        {
+            std::cout << "  Standard version is " << std::fixed << std::setprecision( 2 ) << (1.0 / speedup) << "x faster" << std::endl;
+            std::cout << "  Slowdown: " << std::fixed << std::setprecision( 1 ) << ((1.0 - speedup) * 100.0) << "%" << std::endl;
+        }
+        std::cout << std::endl;
+
+        mp_limb_t carry1 = atn_add_n( result.data(), a.data(), b.data(), limbCount );
+        mp_limb_t carry2 = atn_add_n_intrinsic( result.data(), a.data(), b.data(), limbCount );
+
+        if ( carry1 == carry2 )
+        {
+            std::cout << "Correctness: Both implementations produce the same carry value." << std::endl;
+        }
+        else
+        {
+            std::cout << "WARNING: Implementations produce different carry values!" << std::endl;
+            std::cout << "  Standard carry: " << carry1 << std::endl;
+            std::cout << "  Intrinsic carry: " << carry2 << std::endl;
+        }
+    }
+
 } // namespace Athena

@@ -30,5 +30,12 @@ int main()
 
 	add();
 
+	// Default: 100 limbs, 10000 iterations
+	//Athena::benchmark_add_n_implementations();
+
+	// Custom parameters
+	Athena::benchmark_add_n_implementations( 50, 100000 );
+	return 0;
+
 	return 0;
 }
