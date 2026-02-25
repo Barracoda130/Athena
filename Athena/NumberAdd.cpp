@@ -4,6 +4,10 @@
 
 #include "mpfr-impl.h"
 
+#if defined(_MSC_VER)
+#include <intrin.h>
+#endif
+
 
 using namespace Athena;
 
@@ -19,6 +23,7 @@ namespace
   MPN_SAME_OR_INCR2_P(dst, size, src, size)
 
     int atn_add1( mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, round_t rnd_mode );
+    mp_limb_t atn_add_n_intrinsic( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n );
 
     mp_limb_t atn_add_n( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n )
     {
@@ -42,6 +47,73 @@ namespace
         } while ( --n != 0 );
 
         return cy;
+    }
+
+    mp_limb_t atn_add_n_intrinsic( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n )
+    {
+        assert ( n >= 1 );
+        assert ( MPN_SAME_OR_INCR_P( rp, up, n ) );
+        assert ( MPN_SAME_OR_INCR_P( rp, vp, n ) );
+
+#if defined(_MSC_VER)
+        unsigned char carry = 0;
+
+        #if GMP_NUMB_BITS == 64
+        for ( mp_size_t i = 0; i < n; i++ )
+        {
+            carry = _addcarry_u64( carry, up[i], vp[i], reinterpret_cast<unsigned __int64*>( &rp[i] ) );
+        }
+        #elif GMP_NUMB_BITS == 32
+        for ( mp_size_t i = 0; i < n; i++ )
+        {
+            carry = _addcarry_u32( carry, up[i], vp[i], reinterpret_cast<unsigned int*>( &rp[i] ) );
+        }
+        #else
+        mp_limb_t ul, vl, sl, rl, cy, cy1, cy2;
+        cy = 0;
+        mp_size_t i = 0;
+        do
+        {
+            ul = up[i];
+            vl = vp[i];
+            sl = ul + vl;
+            cy1 = sl < ul;
+            rl = sl + cy;
+            cy2 = rl < sl;
+            cy = cy1 | cy2;
+            rp[i] = rl;
+            i++;
+        } while ( i < n );
+        carry = static_cast<unsigned char>( cy );
+        #endif
+
+        return static_cast<mp_limb_t>( carry );
+#elif defined(__GNUC__) || defined(__clang__)
+        mp_limb_t carry = 0;
+        for ( mp_size_t i = 0; i < n; i++ )
+        {
+            mp_limb_t sum;
+            unsigned char carry_out = __builtin_add_overflow( up[i], vp[i], &sum );
+            unsigned char carry_out2 = __builtin_add_overflow( sum, carry, &rp[i] );
+            carry = carry_out | carry_out2;
+        }
+        return carry;
+#else
+        mp_limb_t ul, vl, sl, rl, cy, cy1, cy2;
+        cy = 0;
+        do
+        {
+            ul = *up++;
+            vl = *vp++;
+            sl = ul + vl;
+            cy1 = sl < ul;
+            rl = sl + cy;
+            cy2 = rl < sl;
+            cy = cy1 | cy2;
+            *rp++ = rl;
+        } while ( --n != 0 );
+        return cy;
+#endif
     }
 
     
