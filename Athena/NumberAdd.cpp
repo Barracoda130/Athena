@@ -5,6 +5,7 @@
 #include <chrono>
 #include <random>
 #include <iomanip>
+#include <algorithm>
 
 #include "mpfr-impl.h"
 
@@ -1110,20 +1111,32 @@ namespace Athena
         std::mt19937_64 gen( rd() );
         std::uniform_int_distribution<mp_limb_t> dist;
 
-        std::vector<mp_limb_t> a( limbCount );
-        std::vector<mp_limb_t> b( limbCount );
-        std::vector<mp_limb_t> result( limbCount );
+        std::cout << "=== Benchmarking atn_add_n implementations ===" << std::endl;
+        std::cout << "Generating " << iterations << " sets of random test data..." << std::endl;
 
-        for ( size_t i = 0; i < limbCount; ++i )
+        // Pre-generate all test data to avoid timing contamination
+        std::vector<std::vector<mp_limb_t>> test_data_a( iterations );
+        std::vector<std::vector<mp_limb_t>> test_data_b( iterations );
+        std::vector<std::vector<mp_limb_t>> results( iterations );
+
+        for ( size_t iter = 0; iter < iterations; ++iter )
         {
-            a[i] = dist( gen );
-            b[i] = dist( gen );
+            test_data_a[iter].resize( limbCount );
+            test_data_b[iter].resize( limbCount );
+            results[iter].resize( limbCount );
+
+            for ( size_t i = 0; i < limbCount; ++i )
+            {
+                test_data_a[iter][i] = dist( gen );
+                test_data_b[iter][i] = dist( gen );
+            }
         }
 
-        std::cout << "=== Benchmarking atn_add_n implementations ===" << std::endl;
+        std::cout << "Data generation complete." << std::endl;
         std::cout << "Limb count: " << limbCount << std::endl;
         std::cout << "Iterations: " << iterations << std::endl;
         std::cout << "Limb size: " << GMP_NUMB_BITS << " bits" << std::endl;
+        std::cout << "Total data size: " << (2 * iterations * limbCount * sizeof(mp_limb_t)) / (1024.0 * 1024.0) << " MB" << std::endl;
 
         // Show build configuration
 #ifdef NDEBUG
@@ -1141,9 +1154,15 @@ namespace Athena
 #endif
         std::cout << std::endl;
 
+        // Benchmark standard implementation with different data each iteration
+        size_t iter_index = 0;
         auto result_standard = benchmark_function( [&]()
             {
-                atn_add_n( result.data(), a.data(), b.data(), limbCount );
+                atn_add_n( results[iter_index].data(), 
+                          test_data_a[iter_index].data(), 
+                          test_data_b[iter_index].data(), 
+                          limbCount );
+                iter_index = (iter_index + 1) % iterations;
             }, iterations );
 
         std::cout << "atn_add_n (standard):" << std::endl;
@@ -1152,10 +1171,18 @@ namespace Athena
         std::cout << "  Max:     " << result_standard.maxTimeNanoseconds << " ns" << std::endl;
         std::cout << std::endl;
 
+        // Benchmark intrinsic implementation with different data each iteration
+        iter_index = 0;
         auto result_intrinsic = benchmark_function( [&]()
             {
-                atn_add_n_intrinsic( result.data(), a.data(), b.data(), limbCount );
+                atn_add_n_intrinsic( results[iter_index].data(), 
+                                    test_data_a[iter_index].data(), 
+                                    test_data_b[iter_index].data(), 
+                                    limbCount );
+                iter_index = (iter_index + 1) % iterations;
             }, iterations );
+
+        // Take median rather than mean - mean is squewed by max + min
 
         std::cout << "atn_add_n_intrinsic:" << std::endl;
         std::cout << "  Average: " << result_intrinsic.avgTimeNanoseconds << " ns" << std::endl;
@@ -1177,18 +1204,29 @@ namespace Athena
         }
         std::cout << std::endl;
 
-        mp_limb_t carry1 = atn_add_n( result.data(), a.data(), b.data(), limbCount );
-        mp_limb_t carry2 = atn_add_n_intrinsic( result.data(), a.data(), b.data(), limbCount );
+        // Verify correctness using first test set
+        std::vector<mp_limb_t> verify_result1( limbCount );
+        std::vector<mp_limb_t> verify_result2( limbCount );
 
-        if ( carry1 == carry2 )
+        mp_limb_t carry1 = atn_add_n( verify_result1.data(), test_data_a[0].data(), test_data_b[0].data(), limbCount );
+        mp_limb_t carry2 = atn_add_n_intrinsic( verify_result2.data(), test_data_a[0].data(), test_data_b[0].data(), limbCount );
+
+        bool results_match = (carry1 == carry2) && 
+                            std::equal( verify_result1.begin(), verify_result1.end(), verify_result2.begin() );
+
+        if ( results_match )
         {
-            std::cout << "Correctness: Both implementations produce the same carry value." << std::endl;
+            std::cout << "Correctness: Both implementations produce identical results." << std::endl;
         }
         else
         {
-            std::cout << "WARNING: Implementations produce different carry values!" << std::endl;
+            std::cout << "WARNING: Implementations produce different results!" << std::endl;
             std::cout << "  Standard carry: " << carry1 << std::endl;
             std::cout << "  Intrinsic carry: " << carry2 << std::endl;
+            if ( carry1 == carry2 )
+            {
+                std::cout << "  Carry values match, but result limbs differ!" << std::endl;
+            }
         }
     }
 

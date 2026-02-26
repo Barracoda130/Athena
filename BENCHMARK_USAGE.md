@@ -50,9 +50,14 @@ int main()
 
 ```
 === Benchmarking atn_add_n implementations ===
+Generating 10000 sets of random test data...
+Data generation complete.
 Limb count: 100
 Iterations: 10000
 Limb size: 64 bits
+Total data size: 15.26 MB
+Build: RELEASE (optimized)
+Compiler: MSVC 1930
 
 atn_add_n (standard):
   Average: 245.32 ns
@@ -68,7 +73,7 @@ Performance comparison:
   Intrinsic version is 1.31x faster
   Speedup: 30.9%
 
-Correctness: Both implementations produce the same carry value.
+Correctness: Both implementations produce identical results.
 ```
 
 ## Parameters
@@ -91,6 +96,8 @@ Correctness: Both implementations produce the same carry value.
 5. **Compiler Intrinsics**: The intrinsic version uses:
    - MSVC: `_addcarry_u64` / `_addcarry_u32`
    - GCC/Clang: `__builtin_add_overflow`
+6. **Memory Usage**: Large iteration counts with many limbs will use significant memory. The benchmark pre-generates all test data to avoid timing contamination.
+7. **Realistic Testing**: Each iteration uses different random data, preventing CPU cache optimizations that wouldn't occur in real-world usage.
 
 ## Enabling Optimizations
 
