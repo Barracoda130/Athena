@@ -59,24 +59,46 @@ namespace
 
     mp_limb_t atn_add_n_intrinsic( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n )
     {
-        assert ( n >= 1 );
-        assert ( MPN_SAME_OR_INCR_P( rp, up, n ) );
-        assert ( MPN_SAME_OR_INCR_P( rp, vp, n ) );
+        assert( n >= 1 );
+        assert( MPN_SAME_OR_INCR_P( rp, up, n ) );
+        assert( MPN_SAME_OR_INCR_P( rp, vp, n ) );
 
 #if defined(_MSC_VER)
         unsigned char carry = 0;
 
-        #if GMP_NUMB_BITS == 64
-        for ( mp_size_t i = 0; i < n; i++ )
+#if GMP_NUMB_BITS == 64
+        auto* r = reinterpret_cast<unsigned __int64*>(rp);
+        auto* u = reinterpret_cast<const unsigned __int64*>(up);
+        auto* v = reinterpret_cast<const unsigned __int64*>(vp);
+
+        while ( n >= 4 )
         {
-            carry = _addcarry_u64( carry, up[i], vp[i], reinterpret_cast<unsigned __int64*>( &rp[i] ) );
+            carry = _addcarry_u64( carry, u[0], v[0], &r[0] );
+            carry = _addcarry_u64( carry, u[1], v[1], &r[1] );
+            carry = _addcarry_u64( carry, u[2], v[2], &r[2] );
+            carry = _addcarry_u64( carry, u[3], v[3], &r[3] );
+            u += 4; v += 4; r += 4; n -= 4;
         }
-        #elif GMP_NUMB_BITS == 32
-        for ( mp_size_t i = 0; i < n; i++ )
+        while ( n-- > 0 )
+            carry = _addcarry_u64( carry, *u++, *v++, r++ );
+
+#elif GMP_NUMB_BITS == 32
+        auto* r = reinterpret_cast<unsigned int*>(rp);
+        auto* u = reinterpret_cast<const unsigned int*>(up);
+        auto* v = reinterpret_cast<const unsigned int*>(vp);
+
+        while ( n >= 4 )
         {
-            carry = _addcarry_u32( carry, up[i], vp[i], reinterpret_cast<unsigned int*>( &rp[i] ) );
+            carry = _addcarry_u32( carry, u[0], v[0], &r[0] );
+            carry = _addcarry_u32( carry, u[1], v[1], &r[1] );
+            carry = _addcarry_u32( carry, u[2], v[2], &r[2] );
+            carry = _addcarry_u32( carry, u[3], v[3], &r[3] );
+            u += 4; v += 4; r += 4; n -= 4;
         }
-        #else
+        while ( n-- > 0 )
+            carry = _addcarry_u32( carry, *u++, *v++, r++ );
+
+#else
         mp_limb_t ul, vl, sl, rl, cy, cy1, cy2;
         cy = 0;
         mp_size_t i = 0;
@@ -93,17 +115,39 @@ namespace
             i++;
         } while ( i < n );
         carry = static_cast<unsigned char>( cy );
-        #endif
+#endif
 
         return static_cast<mp_limb_t>( carry );
 #elif defined(__GNUC__) || defined(__clang__)
         mp_limb_t carry = 0;
-        for ( mp_size_t i = 0; i < n; i++ )
+        while ( n >= 4 )
         {
             mp_limb_t sum;
-            unsigned char carry_out = __builtin_add_overflow( up[i], vp[i], &sum );
-            unsigned char carry_out2 = __builtin_add_overflow( sum, carry, &rp[i] );
-            carry = carry_out | carry_out2;
+            unsigned char c1 = __builtin_add_overflow( up[0], vp[0], &sum );
+            unsigned char c2 = __builtin_add_overflow( sum, carry, &rp[0] );
+            carry = c1 | c2;
+
+            c1 = __builtin_add_overflow( up[1], vp[1], &sum );
+            c2 = __builtin_add_overflow( sum, carry, &rp[1] );
+            carry = c1 | c2;
+
+            c1 = __builtin_add_overflow( up[2], vp[2], &sum );
+            c2 = __builtin_add_overflow( sum, carry, &rp[2] );
+            carry = c1 | c2;
+
+            c1 = __builtin_add_overflow( up[3], vp[3], &sum );
+            c2 = __builtin_add_overflow( sum, carry, &rp[3] );
+            carry = c1 | c2;
+
+            up += 4; vp += 4; rp += 4; n -= 4;
+        }
+        while ( n-- > 0 )
+        {
+            mp_limb_t sum;
+            unsigned char c1 = __builtin_add_overflow( *up++, *vp++, &sum );
+            unsigned char c2 = __builtin_add_overflow( sum, carry, rp );
+            carry = c1 | c2;
+            ++rp;
         }
         return carry;
 #else
@@ -1072,7 +1116,7 @@ namespace Athena
 
     struct BenchmarkResult
     {
-        double avgTimeNanoseconds;
+        double medianTimeNanoseconds;
         double minTimeNanoseconds;
         double maxTimeNanoseconds;
         size_t iterations;
@@ -1084,7 +1128,8 @@ namespace Athena
         BenchmarkResult benchmark_function( Func func, size_t iterations )
         {
             BenchmarkResult result{ 0.0, std::numeric_limits<double>::max(), 0.0, iterations };
-            double totalTime = 0.0;
+            std::vector<double> times;
+            times.reserve( iterations );
 
             for ( size_t i = 0; i < iterations; ++i )
             {
@@ -1095,14 +1140,27 @@ namespace Athena
                 auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>( end - start ).count();
                 double timeNs = static_cast<double>( duration );
 
-                totalTime += timeNs;
+                times.push_back( timeNs );
                 result.minTimeNanoseconds = std::min( result.minTimeNanoseconds, timeNs );
                 result.maxTimeNanoseconds = std::max( result.maxTimeNanoseconds, timeNs );
             }
 
-            result.avgTimeNanoseconds = totalTime / iterations;
+            // Calculate median
+            std::sort( times.begin(), times.end() );
+            if ( iterations % 2 == 0 )
+            {
+                // Even number of elements: average of middle two
+                result.medianTimeNanoseconds = (times[iterations / 2 - 1] + times[iterations / 2]) / 2.0;
+            }
+            else
+            {
+                // Odd number of elements: middle element
+                result.medianTimeNanoseconds = times[iterations / 2];
+            }
+
             return result;
         }
+    
     }
 
     void benchmark_add_n_implementations( size_t limbCount, size_t iterations )
@@ -1166,7 +1224,7 @@ namespace Athena
             }, iterations );
 
         std::cout << "atn_add_n (standard):" << std::endl;
-        std::cout << "  Average: " << result_standard.avgTimeNanoseconds << " ns" << std::endl;
+        std::cout << "  Median:  " << result_standard.medianTimeNanoseconds << " ns" << std::endl;
         std::cout << "  Min:     " << result_standard.minTimeNanoseconds << " ns" << std::endl;
         std::cout << "  Max:     " << result_standard.maxTimeNanoseconds << " ns" << std::endl;
         std::cout << std::endl;
@@ -1175,22 +1233,22 @@ namespace Athena
         iter_index = 0;
         auto result_intrinsic = benchmark_function( [&]()
             {
-                atn_add_n_intrinsic( results[iter_index].data(), 
-                                    test_data_a[iter_index].data(), 
-                                    test_data_b[iter_index].data(), 
-                                    limbCount );
+                atn_add_n_intrinsic( results[iter_index].data(),
+                    test_data_a[iter_index].data(),
+                    test_data_b[iter_index].data(),
+                    limbCount );
                 iter_index = (iter_index + 1) % iterations;
             }, iterations );
 
-        // Take median rather than mean - mean is squewed by max + min
-
         std::cout << "atn_add_n_intrinsic:" << std::endl;
-        std::cout << "  Average: " << result_intrinsic.avgTimeNanoseconds << " ns" << std::endl;
+        std::cout << "  Median:  " << result_intrinsic.medianTimeNanoseconds << " ns" << std::endl;
         std::cout << "  Min:     " << result_intrinsic.minTimeNanoseconds << " ns" << std::endl;
         std::cout << "  Max:     " << result_intrinsic.maxTimeNanoseconds << " ns" << std::endl;
         std::cout << std::endl;
 
-        double speedup = result_standard.avgTimeNanoseconds / result_intrinsic.avgTimeNanoseconds;
+        double speedup = result_standard.medianTimeNanoseconds / result_intrinsic.medianTimeNanoseconds;
+
+        
         std::cout << "Performance comparison:" << std::endl;
         if ( speedup > 1.0 )
         {
