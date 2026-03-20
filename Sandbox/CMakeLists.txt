@@ -12,7 +12,7 @@ target_sources(Sandbox
         "MpfrPlayground.hpp"
         ${COMMON_SRC}
         ${COMMON_HDR}
-)
+ "CodeProfiling.cpp")
 
 # Add the Common directory to the target include paths so headers can be referenced without "../"
 target_include_directories(Sandbox PRIVATE ${CMAKE_SOURCE_DIR}/Common)

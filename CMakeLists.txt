@@ -13,6 +13,8 @@ endif()
 
 project("Athena")
 
+option(ATHENA_ENABLE_FAST_MATH "Enable aggressive floating-point optimizations" OFF)
+
 # Set default build type to Release if not specified
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
@@ -26,8 +28,15 @@ if(MSVC)
     set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LTCG")
     set(CMAKE_STATIC_LINKER_FLAGS_RELEASE "${CMAKE_STATIC_LINKER_FLAGS_RELEASE} /LTCG")
 
-    # Additional MSVC optimizations
-    add_compile_options(/arch:AVX2)  # Enable AVX2 instructions (comment out if CPU doesn't support)
+    # Additional MSVC optimizations for modern x64 CPUs (e.g. Zen 4)
+    add_compile_options(
+        $<$<CONFIG:Release>:/arch:AVX2>
+        $<$<CONFIG:Release>:/favor:AMD64>
+    )
+
+    if(ATHENA_ENABLE_FAST_MATH)
+        add_compile_options($<$<CONFIG:Release>:/fp:fast>)
+    endif()
 else()
     # GCC/Clang optimization flags
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -march=native -DNDEBUG")
@@ -50,4 +59,5 @@ include_directories("Common")
 add_subdirectory ("Athena")
 add_subdirectory ("Sandbox")
 add_subdirectory ("Tests")
+add_subdirectory ("Benchmarking")
 

@@ -1,8 +1,11 @@
 #include "Athena.hpp"
 #include "MpfrPlayground.hpp"
 #include <iostream>
+#include <stdio.h>
 
-int main()
+
+
+void atnThings()
 {
 	Athena::Number num1( "-12", 256 );
 	Athena::Number num2( "13", 256 );
@@ -23,9 +26,9 @@ int main()
 
 	mpfr_add( mpfr_r, a, b, MPFR_RNDN );
 
-	bool eq = static_cast<bool>( mpfr_equal_p( a, b ) );
+	bool eq = static_cast<bool>(mpfr_equal_p( a, b ));
 	std::cout << "mpfr_equal_p result: " << eq << std::endl;
-	std::cout << "eq " << ( mpfr_r == result ) << std::endl;
+	std::cout << "eq " << (mpfr_r == result) << std::endl;
 	std::cout << a << std::endl;
 
 	add();
@@ -34,8 +37,12 @@ int main()
 	//Athena::benchmark_add_n_implementations();
 
 	// Custom parameters
-	Athena::benchmark_add_n_implementations( 1000, 10000 );
-	return 0;
+	for ( size_t limbCount : { 10, 100, 1000 } )
+		Athena::benchmark_add_n_implementations( limbCount, 100000 );
+}
 
+int main()
+{
+	atnThings();
 	return 0;
 }

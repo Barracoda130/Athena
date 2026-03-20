@@ -11,6 +11,7 @@
 
 #if defined(_MSC_VER)
 #include <intrin.h>
+#include <immintrin.h>
 #endif
 
 
@@ -31,6 +32,7 @@ namespace
 
     int atn_add1( mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, round_t rnd_mode );
     mp_limb_t atn_add_n_intrinsic( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n );
+    mp_limb_t atn_add_n_intrinsic_adx( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n );
 
     mp_limb_t atn_add_n( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n )
     {
@@ -167,6 +169,57 @@ namespace
         return cy;
 #endif
     }
+
+    mp_limb_t atn_add_n_intrinsic_adx( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n )
+    {
+        assert( n >= 1 );
+        assert( MPN_SAME_OR_INCR_P( rp, up, n ) );
+        assert( MPN_SAME_OR_INCR_P( rp, vp, n ) );
+
+#if defined(_MSC_VER)
+        unsigned char carry = 0;
+
+#if GMP_NUMB_BITS == 64
+        auto* r = reinterpret_cast<unsigned __int64*>( rp );
+        auto* u = reinterpret_cast<const unsigned __int64*>( up );
+        auto* v = reinterpret_cast<const unsigned __int64*>( vp );
+
+        while ( n >= 4 )
+        {
+            carry = _addcarryx_u64( carry, u[0], v[0], &r[0] );
+            carry = _addcarryx_u64( carry, u[1], v[1], &r[1] );
+            carry = _addcarryx_u64( carry, u[2], v[2], &r[2] );
+            carry = _addcarryx_u64( carry, u[3], v[3], &r[3] );
+            u += 4; v += 4; r += 4; n -= 4;
+        }
+        while ( n-- > 0 )
+            carry = _addcarryx_u64( carry, *u++, *v++, r++ );
+#elif GMP_NUMB_BITS == 32
+        auto* r = reinterpret_cast<unsigned int*>( rp );
+        auto* u = reinterpret_cast<const unsigned int*>( up );
+        auto* v = reinterpret_cast<const unsigned int*>( vp );
+
+        while ( n >= 4 )
+        {
+            carry = _addcarryx_u32( carry, u[0], v[0], &r[0] );
+            carry = _addcarryx_u32( carry, u[1], v[1], &r[1] );
+            carry = _addcarryx_u32( carry, u[2], v[2], &r[2] );
+            carry = _addcarryx_u32( carry, u[3], v[3], &r[3] );
+            u += 4; v += 4; r += 4; n -= 4;
+        }
+        while ( n-- > 0 )
+            carry = _addcarryx_u32( carry, *u++, *v++, r++ );
+#else
+        return atn_add_n_intrinsic( rp, up, vp, n );
+#endif
+
+        return static_cast<mp_limb_t>( carry );
+#else
+        return atn_add_n_intrinsic( rp, up, vp, n );
+#endif
+    }
+
+
 
     
 
@@ -1116,6 +1169,7 @@ namespace Athena
 
     struct BenchmarkResult
     {
+        double meanTimeNanoseconds;
         double medianTimeNanoseconds;
         double minTimeNanoseconds;
         double maxTimeNanoseconds;
@@ -1127,9 +1181,10 @@ namespace Athena
         template<typename Func>
         BenchmarkResult benchmark_function( Func func, size_t iterations )
         {
-            BenchmarkResult result{ 0.0, std::numeric_limits<double>::max(), 0.0, iterations };
+            BenchmarkResult result{ 0.0, 0.0, std::numeric_limits<double>::max(), 0.0, iterations };
             std::vector<double> times;
             times.reserve( iterations );
+            double totalTime = 0.0;
 
             for ( size_t i = 0; i < iterations; ++i )
             {
@@ -1141,9 +1196,12 @@ namespace Athena
                 double timeNs = static_cast<double>( duration );
 
                 times.push_back( timeNs );
+                totalTime += timeNs;
                 result.minTimeNanoseconds = std::min( result.minTimeNanoseconds, timeNs );
                 result.maxTimeNanoseconds = std::max( result.maxTimeNanoseconds, timeNs );
             }
+
+            result.meanTimeNanoseconds = totalTime / static_cast<double>( iterations );
 
             // Calculate median
             std::sort( times.begin(), times.end() );
@@ -1224,6 +1282,7 @@ namespace Athena
             }, iterations );
 
         std::cout << "atn_add_n (standard):" << std::endl;
+        std::cout << "  Mean:    " << result_standard.meanTimeNanoseconds << " ns" << std::endl;
         std::cout << "  Median:  " << result_standard.medianTimeNanoseconds << " ns" << std::endl;
         std::cout << "  Min:     " << result_standard.minTimeNanoseconds << " ns" << std::endl;
         std::cout << "  Max:     " << result_standard.maxTimeNanoseconds << " ns" << std::endl;
@@ -1241,9 +1300,27 @@ namespace Athena
             }, iterations );
 
         std::cout << "atn_add_n_intrinsic:" << std::endl;
+        std::cout << "  Mean:    " << result_intrinsic.meanTimeNanoseconds << " ns" << std::endl;
         std::cout << "  Median:  " << result_intrinsic.medianTimeNanoseconds << " ns" << std::endl;
         std::cout << "  Min:     " << result_intrinsic.minTimeNanoseconds << " ns" << std::endl;
         std::cout << "  Max:     " << result_intrinsic.maxTimeNanoseconds << " ns" << std::endl;
+        std::cout << std::endl;
+
+        iter_index = 0;
+        auto result_intrinsic_adx = benchmark_function( [&]()
+            {
+                atn_add_n_intrinsic_adx( results[iter_index].data(),
+                    test_data_a[iter_index].data(),
+                    test_data_b[iter_index].data(),
+                    limbCount );
+                iter_index = (iter_index + 1) % iterations;
+            }, iterations );
+
+        std::cout << "atn_add_n_intrinsic_adx:" << std::endl;
+        std::cout << "  Mean:    " << result_intrinsic_adx.meanTimeNanoseconds << " ns" << std::endl;
+        std::cout << "  Median:  " << result_intrinsic_adx.medianTimeNanoseconds << " ns" << std::endl;
+        std::cout << "  Min:     " << result_intrinsic_adx.minTimeNanoseconds << " ns" << std::endl;
+        std::cout << "  Max:     " << result_intrinsic_adx.maxTimeNanoseconds << " ns" << std::endl;
         std::cout << std::endl;
 
         double speedup = result_standard.medianTimeNanoseconds / result_intrinsic.medianTimeNanoseconds;
@@ -1265,12 +1342,16 @@ namespace Athena
         // Verify correctness using first test set
         std::vector<mp_limb_t> verify_result1( limbCount );
         std::vector<mp_limb_t> verify_result2( limbCount );
+        std::vector<mp_limb_t> verify_result3( limbCount );
 
         mp_limb_t carry1 = atn_add_n( verify_result1.data(), test_data_a[0].data(), test_data_b[0].data(), limbCount );
         mp_limb_t carry2 = atn_add_n_intrinsic( verify_result2.data(), test_data_a[0].data(), test_data_b[0].data(), limbCount );
+        mp_limb_t carry3 = atn_add_n_intrinsic_adx( verify_result3.data(), test_data_a[0].data(), test_data_b[0].data(), limbCount );
 
-        bool results_match = (carry1 == carry2) && 
-                            std::equal( verify_result1.begin(), verify_result1.end(), verify_result2.begin() );
+        bool results_match = (carry1 == carry2) &&
+                            (carry1 == carry3) &&
+                            std::equal( verify_result1.begin(), verify_result1.end(), verify_result2.begin() ) &&
+                            std::equal( verify_result1.begin(), verify_result1.end(), verify_result3.begin() );
 
         if ( results_match )
         {
@@ -1281,7 +1362,8 @@ namespace Athena
             std::cout << "WARNING: Implementations produce different results!" << std::endl;
             std::cout << "  Standard carry: " << carry1 << std::endl;
             std::cout << "  Intrinsic carry: " << carry2 << std::endl;
-            if ( carry1 == carry2 )
+            std::cout << "  Intrinsic ADX carry: " << carry3 << std::endl;
+            if ( carry1 == carry2 && carry1 == carry3 )
             {
                 std::cout << "  Carry values match, but result limbs differ!" << std::endl;
             }

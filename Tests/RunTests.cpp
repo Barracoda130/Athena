@@ -12,6 +12,7 @@
 #include "Athena.hpp"
 
 #define TEST_PRECISION 512
+#define NUM_TESTS 10000
 
 
 static std::string mpfr_tToStr( mpfr_t a_Num )
@@ -156,7 +157,7 @@ void initTest()
 	// If eof is reached then the FileReader class has already closed the file
 	// If the test data doesn't yet exist, generate it
 	if ( file.eofReached() )
-		TestData::generateData( 10 );
+		TestData::generateData( NUM_TESTS );
 }
 
 void cleanupTest() {}

@@ -25,7 +25,7 @@ target_sources(Athena
         FILES
             "Athena.hpp"
 
-  )
+   "RShift.cpp")
 
 target_include_directories(Athena PRIVATE ${CMAKE_SOURCE_DIR}/Common)
 
