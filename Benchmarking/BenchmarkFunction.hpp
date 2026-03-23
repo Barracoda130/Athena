@@ -17,14 +17,6 @@ namespace Benchmarking
 		std::size_t iterations;
 	};
 
-	struct StdMathBenchmarkData
-	{
-		Athena::Number lhs;
-		Athena::Number rhs;
-		Athena::Number result;
-		Athena::round_t round;
-	};
-
 	struct PrecisionRange
 	{
 		Athena::precision_t start;
