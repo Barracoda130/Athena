@@ -113,7 +113,6 @@ void runTest( TestData::FileReader& a_File,
 		n2 = a_File.getNextB();
 	}
 }
-
 	
 void runTest( TestData::FileReader & a_File,
 				std::function<void( mpfr_t, mpfr_t, mpfr_t, mpfr_rnd_t )> a_F1,

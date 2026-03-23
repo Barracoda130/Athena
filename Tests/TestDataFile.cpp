@@ -6,6 +6,8 @@
 #include <cassert>
 #include <filesystem>
 
+#include "RandomNumber.hpp"
+
 #define MIN_NUM_LENGTH 2
 #define MAX_NUM_LENGTH 10
 

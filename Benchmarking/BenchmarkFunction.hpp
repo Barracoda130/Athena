@@ -4,6 +4,8 @@
 #include <cstddef>
 #include <functional>
 
+#include "Athena.hpp"
+
 namespace Benchmarking
 {
 	struct BenchmarkSummary
@@ -15,25 +17,50 @@ namespace Benchmarking
 		std::size_t iterations;
 	};
 
-	class BenchmarkFunction
+	struct StdMathBenchmarkData
+	{
+		Athena::Number lhs;
+		Athena::Number rhs;
+		Athena::Number result;
+		Athena::round_t round;
+	};
+
+	struct PrecisionRange
+	{
+		Athena::precision_t start;
+		Athena::precision_t end;
+		Athena::precision_t step;
+	};
+
+	using StdMathFunction = void ( * )( Athena::Number&, const Athena::Number&, const Athena::Number&, Athena::round_t );
+
+	class BenchmarkFunctionStdMath
 	{
 	public:
-        using DataItem = std::any;
-		using BenchmarkedFunction = std::function<void( DataItem& )>;
-		using DataGenerator = std::function<DataItem( std::size_t iterationIndex )>;
-		using FunctionInvoker = std::function<void( BenchmarkedFunction&, DataItem& )>;
+		BenchmarkFunctionStdMath( StdMathFunction a_Function,
+								  Athena::precision_t a_Precision = mpfr_get_default_prec() );
 
-		BenchmarkFunction( BenchmarkedFunction function,
-						   DataGenerator generator,
-						   FunctionInvoker invoker );
+		void setPrecision( Athena::precision_t a_Precision );
+		void setPrecisionRange( Athena::precision_t a_StartPrecision, Athena::precision_t a_EndPrecision, Athena::precision_t a_Step = 1 );
+		void setIterations( std::size_t a_Iterations );
 
-		BenchmarkSummary run( std::size_t iterations );
+		void runMedian();
+		void runMean();
 
-		BenchmarkedFunction& function();
+		void printSummaries() const;
 
 	private:
-        BenchmarkedFunction m_Function;
-		DataGenerator m_Generator;
-		FunctionInvoker m_Invoker;
+		void generateTestData( std::size_t a_Number, Athena::precision_t a_Precision );
+
+		StdMathFunction m_Function;
+		std::vector<Athena::Number> m_TestDataA;
+		std::vector<Athena::Number> m_TestDataB;
+		std::vector<Athena::Number> m_TestResults;
+		PrecisionRange m_Precision;
+		std::size_t m_Iterations;
+		std::vector<BenchmarkSummary> m_Summaries;
+		bool m_UseJustMean = false;
 	};
 }
+
+

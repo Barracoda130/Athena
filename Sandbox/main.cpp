@@ -37,7 +37,7 @@ void atnThings()
 	//Athena::benchmark_add_n_implementations();
 
 	// Custom parameters
-	for ( size_t limbCount : { 10, 100, 1000 } )
+	for ( size_t limbCount : { 100, 500, 1000 } )
 		Athena::benchmark_add_n_implementations( limbCount, 100000 );
 }
 

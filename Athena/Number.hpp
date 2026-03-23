@@ -44,7 +44,7 @@ namespace Athena
 		bool operator<= ( const Number& a_Other ) const;
 
 		// Assignment
-		Number& operator=( Number& a_Other );
+       Number& operator=( const Number& a_Other );
 
 		// Friend methods
 		friend void add( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round );

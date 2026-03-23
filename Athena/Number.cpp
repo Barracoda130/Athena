@@ -120,8 +120,11 @@ namespace Athena
 		return static_cast<bool>( mpfr_greaterequal_p( a_Other.m_Value, m_Value ) );
 	}
 
-	Number& Number::operator=( Number& a_Other )
+    Number& Number::operator=( const Number& a_Other )
 	{
+      if ( this == &a_Other )
+			return *this;
+
 		set( a_Other, MPFR_RNDN );
 		return *this;
 	}

@@ -8,12 +8,11 @@ add_executable (Benchmarking)
 target_sources(Benchmarking
     PRIVATE
         "main.cpp"
-        "Benchmark.cpp"
         "Benchmark.hpp"
         "BenchmarkFunction.cpp"
         "BenchmarkFunction.hpp"
         ${COMMON_SRC}
-        ${COMMON_HDR} "BenchmarkFunction.cpp")
+        ${COMMON_HDR})
 
 # Add the Common directory to the target include paths so headers can be referenced without "../"
 target_include_directories(Benchmarking PRIVATE ${CMAKE_SOURCE_DIR}/Common)
