@@ -1,4 +1,5 @@
 #include "Number.hpp"
+#include "Athena.hpp"
 
 #include <cassert>
 #include <iostream>
@@ -14,8 +15,31 @@
 #include <immintrin.h>
 #endif
 
+// Each number refers to a different implementation of the add_n function
+// 0 for the original implementation 
+// 1 for the intrinsic implementation 
+// 2 for the intrinsic implementation with ADX instructions
+#define INTRINSIC_VERSION 2
+
 
 using namespace Athena;
+
+namespace Athena
+{
+    void printAtn_add_nVersion()
+    {
+        std::cout <<
+#if INTRINSIC_VERSION == 0
+            "atn_add_n_original"
+#elif INTRINSIC_VERSION == 1
+            "atn_add_n_intrinsic"
+#elif INTRINSIC_VERSION == 2
+            "atn_add_n_intrinsic_adx"
+#endif
+            << std::endl;
+    }
+}
+
 
 namespace
 {
@@ -31,10 +55,25 @@ namespace
 # define DEBUG(x)
 
     int atn_add1( mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, round_t rnd_mode );
+    mp_limb_t atn_add_n_original( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n );
     mp_limb_t atn_add_n_intrinsic( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n );
     mp_limb_t atn_add_n_intrinsic_adx( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n );
 
     mp_limb_t atn_add_n( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n )
+    {
+#if INTRINSIC_VERSION == 0
+		return atn_add_n_original( rp, up, vp, n );
+#elif INTRINSIC_VERSION == 1
+		return atn_add_n_intrinsic( rp, up, vp, n );
+#elif INTRINSIC_VERSION == 2
+        return atn_add_n_intrinsic_adx( rp, up, vp, n );
+#else
+        // Throw error
+        #error "Invalid INTRINSIC_VERSION. Expected 0, 1, or 2."
+#endif
+    }
+
+    mp_limb_t atn_add_n_original( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n )
     {
         mp_limb_t ul, vl, sl, rl, cy, cy1, cy2;
 
@@ -774,7 +813,7 @@ namespace
             DEBUG( mpfr_print_mant_binary( "B= ", MPFR_MANT( b ), p ) );
             bx++;                                /* exp + 1 */
             ap = MPFR_MANT( a );
-            limb = atn_add_n_intrinsic( ap, MPFR_MANT( b ), MPFR_MANT( c ), n );
+            limb = atn_add_n( ap, MPFR_MANT( b ), MPFR_MANT( c ), n );
             DEBUG( mpfr_print_mant_binary( "A= ", ap, p ) );
             MPFR_ASSERTD( limb != 0 );             /* There must be a carry */
             limb = ap[0];                        /* Get LSB (In fact, LSW) */
@@ -972,7 +1011,7 @@ namespace
 
             /* Add the mantissa c from b in a */
             ap = MPFR_MANT( a );
-            limb = atn_add_n_intrinsic( ap, MPFR_MANT( b ), cp, n );
+            limb = atn_add_n( ap, MPFR_MANT( b ), cp, n );
             DEBUG( mpfr_print_mant_binary( "Add=  ", ap, p ) );
 
             /* Check for overflow */

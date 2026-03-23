@@ -14,7 +14,8 @@
 namespace Benchmarking
 {
     BenchmarkFunctionStdMath::BenchmarkFunctionStdMath( StdMathFunction a_Function,
-                                                        Athena::precision_t a_Precision )
+                                                        Athena::precision_t a_Precision,
+                                                        InfoFunction a_InfoFunction )
     {
         m_Function = a_Function;
         setPrecision( a_Precision );
@@ -155,6 +156,13 @@ namespace Benchmarking
         std::cout << "Compiler: Clang " << __clang_major__ << "." << __clang_minor__ << std::endl;
 #endif
         std::cout << std::endl;
+
+        if ( m_InfoFunction )
+        {
+            std::cout << "Info: ";
+            m_InfoFunction();
+            std::cout << std::endl;
+		}
 
         if ( m_UseJustMean )
         {

@@ -13,16 +13,16 @@ struct AddBenchmarkData
 
 int main()
 {
-	constexpr Athena::precision_t precision = 256;
-	constexpr std::size_t iterations = 1000000;
+	constexpr std::size_t iterations = 10000;
 
 	Benchmarking::BenchmarkFunctionStdMath benchmark( Athena::add );
+	benchmark.setInfoFunction( Athena::printAtn_add_nVersion );
 	benchmark.setPrecisionRange( 100, 1000, 100 );
 	benchmark.setIterations( iterations );
 
-	//benchmark.runMean();
-	//benchmark.runMedian();
-	benchmark.runForProfiler();
+	benchmark.runMean();
+	benchmark.runMedian();
+	//benchmark.runForProfiler();
 
 	return 0;
 }

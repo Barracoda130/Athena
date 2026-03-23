@@ -25,17 +25,20 @@ namespace Benchmarking
 	};
 
 	using StdMathFunction = void ( * )( Athena::Number&, const Athena::Number&, const Athena::Number&, Athena::round_t );
+	using InfoFunction = void ( * )();
 
 	class BenchmarkFunctionStdMath
 	{
 	public:
 		BenchmarkFunctionStdMath( StdMathFunction a_Function,
-								  Athena::precision_t a_Precision = mpfr_get_default_prec() );
+								  Athena::precision_t a_Precision = mpfr_get_default_prec(),
+								  InfoFunction = nullptr);
 
 		void setPrecision( Athena::precision_t a_Precision ) { m_Precision = { a_Precision, a_Precision, 1 }; }
 		void setPrecisionRange( Athena::precision_t a_StartPrecision, Athena::precision_t a_EndPrecision, Athena::precision_t a_Step = 1 );
 		void setIterations( std::size_t a_Iterations ) { m_Iterations = a_Iterations; }
 		void setWarmupIterations( std::size_t a_WarmupIterations ) { m_WarmupIterations = a_WarmupIterations; }
+		void setInfoFunction( InfoFunction a_InfoFunction ) { m_InfoFunction = a_InfoFunction; }
 
 		void runMedian();
 		void runMean();
@@ -48,6 +51,7 @@ namespace Benchmarking
 		void generateTestData( std::size_t a_Number, Athena::precision_t a_Precision );
 
 		StdMathFunction m_Function;
+		InfoFunction m_InfoFunction;
 		std::vector<Athena::Number> m_TestDataA;
 		std::vector<Athena::Number> m_TestDataB;
 		std::vector<Athena::Number> m_TestResults;
