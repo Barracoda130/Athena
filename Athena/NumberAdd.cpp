@@ -1,4 +1,5 @@
 #include "Number.hpp"
+
 #include "Athena.hpp"
 
 #include <cassert>
@@ -9,6 +10,7 @@
 #include <algorithm>
 
 #include "mpfr-impl.h"
+#include "Shift.hpp"
 
 #if defined(_MSC_VER)
 #include <intrin.h>
@@ -385,7 +387,7 @@ namespace
             if ( MPFR_LIKELY( shift ) )
             {
                 MPFR_ASSERTD( a2p - difn >= ap );
-                cc = mpn_rshift( a2p - difn, cp + (cn - difn), difn, shift );
+                cc = atn_rshift( a2p - difn, cp + (cn - difn), difn, shift );
                 if ( MPFR_UNLIKELY( a2p - difn > ap ) )
                     *(a2p - difn - 1) = cc;
             }
@@ -418,7 +420,7 @@ namespace
                     else if ( bb == mask )
                         fb = 1;
                 }
-                mpn_rshift( ap, ap, an, 1 );
+                atn_rshift( ap, ap, an, 1 );
                 ap[an - 1] += MPFR_LIMB_HIGHBIT;
                 if ( sh && fb < 0 )
                     goto rounding;
@@ -817,7 +819,7 @@ namespace
             DEBUG( mpfr_print_mant_binary( "A= ", ap, p ) );
             MPFR_ASSERTD( limb != 0 );             /* There must be a carry */
             limb = ap[0];                        /* Get LSB (In fact, LSW) */
-            mpn_rshift( ap, ap, n, 1 );            /* Shift mantissa A */
+            atn_rshift( ap, ap, n, 1 );            /* Shift mantissa A */
             ap[n - 1] |= MPFR_LIMB_HIGHBIT;        /* Set MSB */
             ap[0] &= ~MPFR_LIMB_MASK( sh );      /* Clear LSB bit */
             if ( MPFR_LIKELY( (limb & (MPFR_LIMB_ONE << sh)) == 0 ) ) /* Check exact case */
@@ -926,12 +928,12 @@ namespace
                 {
                     /* dm >=1 and m == 0: just shift */
                     MPFR_ASSERTD( dm >= 1 );
-                    mpn_rshift( cp, MPFR_MANT( c ), n, dm );
+                    atn_rshift( cp, MPFR_MANT( c ), n, dm );
                 }
                 else
                 {
                     /* dm > 0 and m > 0: shift and zero  */
-                    mpn_rshift( cp, MPFR_MANT( c ) + m, n - m, dm );
+                    atn_rshift( cp, MPFR_MANT( c ) + m, n - m, dm );
                     MPN_ZERO( cp + n - m, m );
                 }
             }
@@ -1018,7 +1020,7 @@ namespace
             if ( MPFR_UNLIKELY( limb ) )
             {
                 limb = ap[0] & (MPFR_LIMB_ONE << sh); /* Get LSB */
-                mpn_rshift( ap, ap, n, 1 );          /* Shift mantissa*/
+                atn_rshift( ap, ap, n, 1 );          /* Shift mantissa*/
                 bx++;                               /* Fix exponent */
                 ap[n - 1] |= MPFR_LIMB_HIGHBIT;       /* Set MSB */
                 ap[0] &= mask;                    /* Clear LSB bit */

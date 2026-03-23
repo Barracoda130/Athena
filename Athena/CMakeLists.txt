@@ -16,6 +16,7 @@ target_sources(Athena
         "Number.cpp"
         "Athena.cpp"
         "NumberAdd.cpp"
+        "Shift.cpp"
         ${MPFR_SRCS}
         ${MPFR_HDRS}
         ${COMMON_SRC}
@@ -24,8 +25,7 @@ target_sources(Athena
         FILE_SET HEADERS
         FILES
             "Athena.hpp"
-
-   "RShift.cpp")
+)
 
 target_include_directories(Athena PRIVATE ${CMAKE_SOURCE_DIR}/Common)
 
