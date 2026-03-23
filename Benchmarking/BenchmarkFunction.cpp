@@ -21,20 +21,10 @@ namespace Benchmarking
         setIterations( 1000 );
     }
 
-    void BenchmarkFunctionStdMath::setPrecision( Athena::precision_t a_Precision )
-    {
-        m_Precision = { a_Precision, a_Precision, 1 };
-    }
-
     void BenchmarkFunctionStdMath::setPrecisionRange( Athena::precision_t a_StartPrecision, Athena::precision_t a_EndPrecision, Athena::precision_t a_Step )
     {
 		assert( a_Step > 0 && "Step must be greater than 0" );
 		m_Precision = { a_StartPrecision, a_EndPrecision, a_Step };
-    }
-
-    void BenchmarkFunctionStdMath::setIterations( std::size_t a_Iterations )
-    {
-		m_Iterations = a_Iterations;
     }
 
     void BenchmarkFunctionStdMath::runMedian()
@@ -45,14 +35,19 @@ namespace Benchmarking
         for ( index_t prec = m_Precision.start; prec <= m_Precision.end; prec += m_Precision.step )
         {
             std::cout << "Running benchmark for precision " << prec << "..." << std::endl;
-            generateTestData( m_Iterations, prec );
+            generateTestData( m_Iterations + m_WarmupIterations, prec );
 			BenchmarkSummary summary{ 0.0, 0.0, std::numeric_limits<double>::max(), 0.0, m_Iterations };
 
             std::vector<double> times;
             times.reserve( m_Iterations );
             double totalTime = 0.0;
+
+            for ( index_t i = 0; i < m_WarmupIterations; i++ )
+            {
+                m_Function( m_TestResults[i], m_TestDataA[i], m_TestDataB[i], MPFR_RNDN );
+			}
             
-			for ( index_t i = 0; i < m_Iterations; ++i )
+			for ( index_t i = 0; i < m_Iterations; i++ )
             {
 				auto start = std::chrono::high_resolution_clock::now();
                 m_Function( m_TestResults[i], m_TestDataA[i], m_TestDataB[i], MPFR_RNDN );
@@ -95,13 +90,18 @@ namespace Benchmarking
         for ( index_t prec = m_Precision.start; prec <= m_Precision.end; prec += m_Precision.step )
         {
             std::cout << "Running benchmark for precision " << prec << "..." << std::endl;
-            generateTestData( m_Iterations, prec );
+            generateTestData( m_Iterations + m_WarmupIterations, prec );
             BenchmarkSummary summary{ 0.0, 0.0, 0.0, 0.0, m_Iterations };
 
             double totalTime = 0.0;
 
+			for ( index_t i = 0; i < m_WarmupIterations; i++ )
+            {
+                m_Function( m_TestResults[i], m_TestDataA[i], m_TestDataB[i], MPFR_RNDN );
+            }
+
             auto start = std::chrono::high_resolution_clock::now();
-            for ( index_t i = 0; i < m_Iterations; ++i )
+            for ( index_t i = 0; i < m_Iterations; i++ )
             {
                 m_Function( m_TestResults[i], m_TestDataA[i], m_TestDataB[i], MPFR_RNDN );
             }
@@ -114,6 +114,16 @@ namespace Benchmarking
         }
 
         printSummaries();
+    }
+
+    void BenchmarkFunctionStdMath::runForProfiler()
+    {
+		generateTestData( 1, m_Precision.start );
+
+        for ( index_t i = 0; i < m_Iterations; ++i )
+        {
+            m_Function( m_TestResults[0], m_TestDataA[0], m_TestDataB[0], MPFR_RNDN );
+		}
     }
 
     void BenchmarkFunctionStdMath::printSummaries() const

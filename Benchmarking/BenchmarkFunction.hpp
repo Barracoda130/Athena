@@ -40,12 +40,15 @@ namespace Benchmarking
 		BenchmarkFunctionStdMath( StdMathFunction a_Function,
 								  Athena::precision_t a_Precision = mpfr_get_default_prec() );
 
-		void setPrecision( Athena::precision_t a_Precision );
+		void setPrecision( Athena::precision_t a_Precision ) { m_Precision = { a_Precision, a_Precision, 1 }; }
 		void setPrecisionRange( Athena::precision_t a_StartPrecision, Athena::precision_t a_EndPrecision, Athena::precision_t a_Step = 1 );
-		void setIterations( std::size_t a_Iterations );
+		void setIterations( std::size_t a_Iterations ) { m_Iterations = a_Iterations; }
+		void setWarmupIterations( std::size_t a_WarmupIterations ) { m_WarmupIterations = a_WarmupIterations; }
 
 		void runMedian();
 		void runMean();
+
+		void runForProfiler();
 
 		void printSummaries() const;
 
@@ -60,6 +63,7 @@ namespace Benchmarking
 		std::size_t m_Iterations;
 		std::vector<BenchmarkSummary> m_Summaries;
 		bool m_UseJustMean = false;
+		std::size_t m_WarmupIterations = 1000;
 	};
 }
 
