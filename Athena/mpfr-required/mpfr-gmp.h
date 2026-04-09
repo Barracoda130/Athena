@@ -19,7 +19,7 @@ struct tmp_marker
 
 # define _MPFR_PROTO(x) ()
 #define __GMP_DECLSPEC_EXPORT  __declspec(dllexport)
-# define __MPFR_DECLSPEC __GMP_DECLSPEC_EXPORT
+//# define __MPFR_DECLSPEC __GMP_DECLSPEC_EXPORT
 
 __MPFR_DECLSPEC void* atn_tmp_allocate (struct tmp_marker**,
     size_t);
@@ -54,5 +54,8 @@ __MPFR_DECLSPEC void atn_tmp_free (struct tmp_marker*);
   while (0)
 
 #define MP_LIMB_T_MAX (~(mp_limb_t)0)
+typedef mp_limb_t UWtype;
+#define W_TYPE_SIZE GMP_NUMB_BITS
+#define MPN_COPY_DECR(dst,src,n) memmove((dst),(src),(n)*MPFR_BYTES_PER_MP_LIMB)
 
 #endif

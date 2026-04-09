@@ -35,10 +35,6 @@ void atnThings()
 
 	// Default: 100 limbs, 10000 iterations
 	//Athena::benchmark_add_n_implementations();
-
-	// Custom parameters
-	for ( size_t limbCount : { 100, 500, 1000 } )
-		Athena::benchmark_add_n_implementations( limbCount, 100000 );
 }
 
 int main()

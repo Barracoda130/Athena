@@ -145,11 +145,6 @@ namespace Athena
 
 	// Non member methods
 
-	void sub( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round )
-	{
-		mpfr_sub( a_Result.m_Value, a_Num1.m_Value, a_Num2.m_Value, a_Round );
-	}
-
 	void mul( Number & a_Result, const Number & a_Num1, const Number & a_Num2, round_t a_Round )
 	{
 		mpfr_mul( a_Result.m_Value, a_Num1.m_Value, a_Num2.m_Value, a_Round );

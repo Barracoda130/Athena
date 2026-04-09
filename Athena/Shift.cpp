@@ -1,4 +1,4 @@
-#include "mpfr-impl.h"
+#include "Shift.hpp"
 
 #include <cassert>
 
@@ -13,7 +13,6 @@ atn_rshift( mp_ptr rp, mp_srcptr up, mp_size_t n, unsigned int cnt )
     assert( n >= 1 );
     assert( cnt >= 1 );
     assert( cnt < GMP_NUMB_BITS );
-    assert( MPN_SAME_OR_INCR_P( rp, up, n ) );
 
     tnc = GMP_NUMB_BITS - cnt;
     high_limb = *up++;
