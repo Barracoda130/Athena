@@ -3,6 +3,8 @@
 
 #include "MpfrInclude.hpp"
 #include <cstdio>
+#include <bitset>
+#include <iostream>
 
 void add()
 {
@@ -10,8 +12,16 @@ void add()
 	mpfr_init2( n1, 256 );
 	mpfr_init2( n2, 256 );
 	
-	mpfr_set_str( n1, "1234567890987654321", 10, MPFR_RNDD );
-	mpfr_set_str( n2, "9999999999999999999", 10, MPFR_RNDD );
+	mpfr_set_str( n1, "123", 16, MPFR_RNDD );
+	mpfr_set_str( n2, "ff1234567890192837ff", 16, MPFR_RNDD );
+	unsigned long long b = 0x123456;
+	unsigned long long* a = &b;
+	
+
+	std::bitset<256> bits_n1(n1->_mpfr_d);
+	std::bitset<256> bits_n2(n2->_mpfr_d);	
+	std::cout << "Bits of n1: " << bits_n1 << std::endl;
+	std::cout << "Bits of n2: " << bits_n2 << std::endl;
 
 	// Print using mpfr_printf (use %Rf for mpfr_t)
 	mpfr_printf("n1 = %.0Rf\n", n1); // "%.0Rf" prints with zero fractional digits (integer style)

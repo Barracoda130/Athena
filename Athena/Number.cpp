@@ -31,9 +31,15 @@ namespace Athena
 		set( a_Value, MPFR_RNDN );
 	}
 
-	Number::Number( const Number& a_Value, round_t a_Round )
+	Number::Number( const Number& a_Value )
 	{
-		mpfr_init2( m_Value, mpfr_get_prec( a_Value.m_Value ) );
+		mpfr_init2( m_Value, a_Value.getPrec() );
+		set( a_Value, MPFR_RNDN );
+	}
+
+	Number::Number( const mpfr_t a_Value, round_t a_Round )
+	{
+		mpfr_init2( m_Value, mpfr_get_prec( a_Value ) );
 		set( a_Value, a_Round );
 	}
 
@@ -45,7 +51,12 @@ namespace Athena
 	// Set methods
 	void Number::set( const Number& a_Value, round_t a_Round )
 	{
-		mpfr_set( m_Value, a_Value.m_Value, a_Round );
+		set( a_Value.m_Value, a_Round );
+	}
+
+	void Number::set( const mpfr_t a_Value, round_t a_Round )
+	{
+		mpfr_set( m_Value, a_Value, a_Round );
 	}
 
 	void Number::set( const std::string& a_Value, round_t a_Round )
@@ -57,6 +68,21 @@ namespace Athena
 	{
 		mpfr_set_uj( m_Value, static_cast<unsigned long>( a_Value ), a_Round );
 	}
+	 
+	std::string Number::str() const
+	{
+		mpfr_exp_t exponent;
+		char* mantissa = mpfr_get_str( nullptr, &exponent, 10, 0, m_Value, MPFR_RNDN );
+		char initial = mantissa[0];
+		mantissa++;
+		if ( initial == '-' )
+		{
+			initial = mantissa[0];
+			mantissa++;
+			return std::format( "-{}.{}e{}", initial, mantissa, exponent - 1 );
+		}
+		return std::format( "{}.{}e{}", initial, mantissa, exponent - 1 );
+	}
 
 	bool Number::operator==( const Number& a_Other ) const
 	{
@@ -66,7 +92,13 @@ namespace Athena
 	// For testing
 	bool Number::operator==( const mpfr_t& a_Other ) const
 	{
-		return static_cast<bool>( mpfr_equal_p( m_Value, a_Other ) );
+		bool result = static_cast<bool>( mpfr_equal_p( m_Value, a_Other ) );
+		if ( !result )
+		{
+			Number tmp( a_Other, MPFR_RNDN );
+			std::cout << *this << " != " << tmp << std::endl;
+		}
+		return result;
 	}
 
 	bool Number::operator!=( const Number& a_Other ) const
@@ -94,8 +126,11 @@ namespace Athena
 		return static_cast<bool>( mpfr_greaterequal_p( a_Other.m_Value, m_Value ) );
 	}
 
-	Number& Number::operator=( Number& a_Other )
+    Number& Number::operator=( const Number& a_Other )
 	{
+      if ( this == &a_Other )
+			return *this;
+
 		set( a_Other, MPFR_RNDN );
 		return *this;
 	}
@@ -103,21 +138,12 @@ namespace Athena
 // Private
 
 // Friend 
-	std::ostream& operator<<( std::ostream& os, Number& a_Num )
+	std::ostream& operator<<( std::ostream& os, const Number& a_Num )
 	{
-		mpfr_exp_t exponent;
-		char* mantissa = mpfr_get_str( nullptr, &exponent, 10, 0, a_Num.m_Value, MPFR_RNDN );
-		char initial = mantissa[0];
-		mantissa++;
-
-		return os << std::format( "{}.{}e{}", initial, mantissa, exponent - 1);
+		return os << a_Num.str();
 	}
 
 	// Non member methods
-	void add( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round )
-	{
-		mpfr_add( a_Result.m_Value, a_Num1.m_Value, a_Num2.m_Value, a_Round );
-	}
 
 	void sub( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round )
 	{

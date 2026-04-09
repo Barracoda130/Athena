@@ -4,4 +4,5 @@
 namespace Athena
 { 
 	void testFunction();
+	void printAtn_add_nVersion();
 }

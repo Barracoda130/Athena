@@ -3,12 +3,16 @@
 # Add source to this project's executable.
 add_executable (Sandbox)
 
+
+
 target_sources(Sandbox
     PRIVATE
         "main.cpp"
         "MpfrPlayground.cpp"
         "MpfrPlayground.hpp"
-)
+        ${COMMON_SRC}
+        ${COMMON_HDR}
+ "CodeProfiling.cpp")
 
 # Add the Common directory to the target include paths so headers can be referenced without "../"
 target_include_directories(Sandbox PRIVATE ${CMAKE_SOURCE_DIR}/Common)
