@@ -3,6 +3,7 @@
     "gmp",
     "mpfr",
     "pkgconf",
-    "catch2"
+    "catch2",
+    "benchmark"
   ]
 }
