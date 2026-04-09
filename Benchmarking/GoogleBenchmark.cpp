@@ -5,7 +5,7 @@
 #include <cstring>
 #include <vector>
 
-#ifdef ATHENA_HAS_GOOGLE_BENCHMARK
+
 #include <benchmark/benchmark.h>
 
 #include "Athena.hpp"
@@ -97,17 +97,3 @@ namespace Benchmarking
     }
 }
 
-#else
-
-#include <iostream>
-
-namespace Benchmarking
-{
-    int runGoogleBenchmark( int /*argc*/, char** /*argv*/ )
-    {
-        std::cout << "Google Benchmark is not available in this build. Install package 'benchmark' to enable it." << std::endl;
-        return 1;
-    }
-}
-
-#endif
