@@ -31,6 +31,12 @@ namespace Athena
 		set( a_Value, MPFR_RNDN );
 	}
 
+	Number::Number( const Number& a_Value )
+	{
+		mpfr_init2( m_Value, a_Value.getPrec() );
+		set( a_Value, MPFR_RNDN );
+	}
+
 	Number::Number( const mpfr_t a_Value, round_t a_Round )
 	{
 		mpfr_init2( m_Value, mpfr_get_prec( a_Value ) );
