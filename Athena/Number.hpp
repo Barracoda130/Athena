@@ -19,6 +19,7 @@ namespace Athena
 		Number( precision_t a_Precision );
 		Number( const std::string& a_Value, precision_t a_Precision );
 		Number( const long long a_Value, precision_t a_Precison );
+       Number( const Number& a_Value );
 		Number( const Number& a_Value, round_t a_Round ) : Number( a_Value.m_Value, a_Round ) {};
 		Number( const mpfr_t a_Value, round_t a_Round );
 
