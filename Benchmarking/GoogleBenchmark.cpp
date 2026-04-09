@@ -72,22 +72,8 @@ namespace Benchmarking
 {
     int runGoogleBenchmark( int argc, char** argv )
     {
-        std::vector<char*> filteredArgs;
-        filteredArgs.reserve( static_cast<std::size_t>( argc ) );
-
-        for ( int i = 0; i < argc; ++i )
-        {
-            if ( std::strcmp( argv[i], "--google-benchmark" ) != 0 )
-            {
-                filteredArgs.push_back( argv[i] );
-            }
-        }
-
-        int filteredArgc = static_cast<int>( filteredArgs.size() );
-        char** filteredArgv = filteredArgs.data();
-
-        benchmark::Initialize( &filteredArgc, filteredArgv );
-        if ( benchmark::ReportUnrecognizedArguments( filteredArgc, filteredArgv ) )
+        benchmark::Initialize( &argc, argv );
+        if ( benchmark::ReportUnrecognizedArguments( argc, argv ) )
         {
             return 1;
         }

@@ -9,9 +9,6 @@ add_executable (Benchmarking)
 target_sources(Benchmarking
     PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/Benchmark.hpp"
-        
-        "${CMAKE_CURRENT_SOURCE_DIR}/BenchmarkFunction.hpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/GoogleBenchmark.cpp"
         "${CMAKE_CURRENT_SOURCE_DIR}/GoogleBenchmark.hpp"
         ${COMMON_SRC}
