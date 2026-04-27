@@ -4,6 +4,7 @@
 
 #include <array>
 #include <cstring>
+#include <random>
 #include <vector>
 
 
@@ -112,53 +113,88 @@ namespace
         BM_Athena( state, Athena::sub );
     }
 
+    void BM_atnAddN( benchmark::State& state )
+    {
+        const auto limbCount = static_cast<mp_size_t>( state.range( 0 ) );
+        constexpr std::size_t poolSize = 4096;
+
+        std::vector<mp_limb_t> lhs( poolSize * limbCount );
+        std::vector<mp_limb_t> rhs( poolSize * limbCount );
+        std::vector<mp_limb_t> out( poolSize * limbCount );
+
+        std::mt19937_64 rng( 0xC0FFEEULL );
+        std::uniform_int_distribution<std::uint64_t> dist;
+
+        for ( std::size_t i = 0; i < lhs.size(); ++i )
+        {
+            lhs[i] = static_cast<mp_limb_t>( dist( rng ) );
+            rhs[i] = static_cast<mp_limb_t>( dist( rng ) );
+        }
+
+        std::size_t idx = 0;
+        for ( auto _ : state )
+        {
+            const std::size_t offset = idx * static_cast<std::size_t>( limbCount );
+            const auto carry = Athena::atn_add_n( out.data() + offset, lhs.data() + offset, rhs.data() + offset, limbCount );
+
+            benchmark::DoNotOptimize( carry );
+            benchmark::DoNotOptimize( out.data() + offset );
+
+            idx = ( idx + 1 ) % poolSize;
+        }
+
+        state.SetItemsProcessed( state.iterations() );
+    }
+
     BENCHMARK( BM_AthenaAdd )
-        ->Arg( 100 )
-        ->Arg( 200 )
-        ->Arg( 300 )
-        ->Arg( 400 )
-        ->Arg( 500 )
-        ->Arg( 600 )
-        ->Arg( 700 )
-        ->Arg( 800 )
-        ->Arg( 900 )
-        ->Arg( 1000 );
+        ->Arg( 128 )
+        ->Arg( 256 )
+        ->Arg( 384 )
+        ->Arg( 512 )
+        ->Arg( 640 )
+        ->Arg( 768 )
+        ->Arg( 896 )
+        ->Arg( 1024 );
 
     BENCHMARK( BM_mpfrAdd )
-        ->Arg( 100 )
-        ->Arg( 200 )
-        ->Arg( 300 )
-        ->Arg( 400 )
-        ->Arg( 500 )
-        ->Arg( 600 )
-        ->Arg( 700 )
-        ->Arg( 800 )
-        ->Arg( 900 )
-        ->Arg( 1000 );
+        ->Arg( 128 )
+        ->Arg( 256 )
+        ->Arg( 384 )
+        ->Arg( 512 )
+        ->Arg( 640 )
+        ->Arg( 768 )
+        ->Arg( 896 )
+        ->Arg( 1024 );
 
     BENCHMARK( BM_AthenaSub )
-        ->Arg( 100 )
-        ->Arg( 200 )
-        ->Arg( 300 )
-        ->Arg( 400 )
-        ->Arg( 500 )
-        ->Arg( 600 )
-        ->Arg( 700 )
-        ->Arg( 800 )
-        ->Arg( 900 )
-        ->Arg( 1000 );
+        ->Arg( 128 )
+        ->Arg( 256 )
+        ->Arg( 384 )
+        ->Arg( 512 )
+        ->Arg( 640 )
+        ->Arg( 768 )
+        ->Arg( 896 )
+        ->Arg( 1024 );
 
     BENCHMARK( BM_mpfrSub )
-        ->Arg( 100 )
-        ->Arg( 200 )
-        ->Arg( 300 )
-        ->Arg( 400 )
-        ->Arg( 500 )
-        ->Arg( 600 )
-        ->Arg( 700 )
-        ->Arg( 800 )
-        ->Arg( 900 )
-        ->Arg( 1000 );
+        ->Arg( 128 )
+        ->Arg( 256 )
+        ->Arg( 384 )
+        ->Arg( 512 )
+        ->Arg( 640 )
+        ->Arg( 768 )
+        ->Arg( 896 )
+        ->Arg( 1024 );
+
+    BENCHMARK( BM_atnAddN )
+        ->Arg( 128 )
+        ->Arg( 256 )
+        ->Arg( 384 )
+        ->Arg( 512 )
+        ->Arg( 640 )
+        ->Arg( 768 )
+        ->Arg( 896 )
+        ->Arg( 1024 );
 }
 
 namespace Benchmarking

@@ -1,5 +1,7 @@
 #pragma once
 #include "MpfrInclude.hpp"
+ 
+#define MATH_INTRINSIC_VERSION 2
 
 namespace Athena
 {
