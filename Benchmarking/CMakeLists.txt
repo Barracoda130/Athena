@@ -23,6 +23,10 @@ target_link_libraries(Benchmarking PRIVATE Athena)
 
 target_link_libraries(Benchmarking PRIVATE benchmark::benchmark)
 
+if(MSVC)
+  target_compile_options(Benchmarking PRIVATE /FAcs /Fa${CMAKE_CURRENT_BINARY_DIR}/)
+endif()
+
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET Benchmarking PROPERTY CXX_STANDARD 20)
 endif()

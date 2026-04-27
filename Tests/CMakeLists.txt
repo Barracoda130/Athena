@@ -27,6 +27,11 @@ target_link_libraries(Tests PRIVATE Athena)
 
 target_link_libraries(Catch2Sandbox PRIVATE Catch2::Catch2WithMain)
 
+if(MSVC)
+  target_compile_options(Tests PRIVATE /FAcs /Fa${CMAKE_CURRENT_BINARY_DIR}/)
+  target_compile_options(Catch2Sandbox PRIVATE /FAcs /Fa${CMAKE_CURRENT_BINARY_DIR}/)
+endif()
+
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET Tests PROPERTY CXX_STANDARD 20)
 endif()
