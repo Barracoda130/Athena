@@ -198,6 +198,88 @@ namespace
 #endif
     }
 
+    mp_limb_t
+        mpn_add_n_avx512_carry_select( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n )
+    {
+        mp_limb_t carry = 0;
+
+        auto* r = reinterpret_cast<std::uint64_t*>(rp);
+        auto* u = reinterpret_cast<const std::uint64_t*>(up);
+        auto* v = reinterpret_cast<const std::uint64_t*>(vp);
+
+        const __m512i one = _mm512_set1_epi64( 1 );
+        const __m512i all_ones = _mm512_set1_epi64( ~0ULL );
+
+        while ( n >= 8 )
+        {
+            // Load 8 limbs from each operand.
+            __m512i vu = _mm512_loadu_si512( reinterpret_cast<const void*>(u) );
+            __m512i vv = _mm512_loadu_si512( reinterpret_cast<const void*>(v) );
+
+            // Provisional sum assuming carry-in = 0
+            __m512i s0 = _mm512_add_epi64( vu, vv );
+
+            // Provisional sum assuming carry-in = 1
+            __m512i s1 = _mm512_add_epi64( s0, one );
+
+            // Generate mask:
+            // g[i] = 1 iff u[i] + v[i] overflows 64 bits
+            __mmask8 gmask = unsigned_lt_epu64_mask( s0, vu );
+
+            // Propagate mask:
+            // p[i] = 1 iff an incoming carry passes through this limb
+            // For a single 64-bit limb this means s0 == 0xFFFFFFFFFFFFFFFF.
+            __mmask8 pmask = _mm512_cmpeq_epi64_mask( s0, all_ones );
+
+            // Resolve the true carry-in for each lane with a tiny scalar prefix pass.
+            //
+            // cin[i] is the actual carry entering lane i.
+            // cout[i] = g[i] | (p[i] & cin[i])
+            //
+            // Lane 0 gets the incoming block carry from the previous block.
+            std::uint8_t g = static_cast<std::uint8_t>(gmask);
+            std::uint8_t p = static_cast<std::uint8_t>(pmask);
+
+            std::uint8_t cin_mask = 0;
+            std::uint8_t c = static_cast<std::uint8_t>(carry);
+
+            for ( int i = 0; i < 8; ++i )
+            {
+                if ( c )
+                    cin_mask |= static_cast<std::uint8_t>( 1u << i );
+
+                std::uint8_t gi = (g >> i) & 1u;
+                std::uint8_t pi = (p >> i) & 1u;
+                c = static_cast<std::uint8_t>( gi | (pi & c) );
+            }
+
+            // Select s1 where the real carry-in was 1, else s0.
+            __m512i res = _mm512_mask_blend_epi64( static_cast<__mmask8>(cin_mask), s0, s1 );
+            _mm512_storeu_si512( reinterpret_cast<void*>(r), res );
+
+            carry = c;
+            u += 8;
+            v += 8;
+            r += 8;
+            n -= 8;
+        }
+
+        // Scalar cleanup for any remaining limbs.
+        while ( n-- > 0 )
+        {
+            unsigned __int64 out;
+            carry = _addcarry_u64(
+                static_cast<unsigned char>(carry),
+                static_cast<unsigned __int64>(*u++),
+                static_cast<unsigned __int64>(*v++),
+                &out
+            );
+            *r++ = static_cast<std::uint64_t>(out);
+        }
+
+        return carry;
+    }
+
     /****************************************************************************
      * Subtraction
      ****************************************************************************/
@@ -400,7 +482,7 @@ namespace Athena
 #elif MATH_INTRINSIC_VERSION == 1
         return atn_add_n_intrinsic( rp, up, vp, n );
 #elif MATH_INTRINSIC_VERSION == 2
-        return atn_add_n_intrinsic_adx( rp, up, vp, n );
+        return mpn_add_n_avx512_carry_select( rp, up, vp, n );
 #else
         // Throw error
 #error "Invalid INTRINSIC_VERSION. Expected 0, 1, or 2."

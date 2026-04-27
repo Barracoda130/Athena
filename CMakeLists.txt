@@ -30,7 +30,7 @@ if(MSVC)
 
     # Additional MSVC optimizations for modern x64 CPUs (e.g. Zen 4)
     add_compile_options(
-        $<$<CONFIG:Release>:/arch:AVX2>
+        $<$<CONFIG:Release>:/arch:AVX512>
         $<$<CONFIG:Release>:/favor:AMD64>
     )
 
