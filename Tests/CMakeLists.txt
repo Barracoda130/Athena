@@ -10,6 +10,7 @@ add_executable(Catch2Sandbox)
 target_sources(Tests
 	PRIVATE
 		"RunTests.cpp"
+       "${CMAKE_CURRENT_SOURCE_DIR}/EdgeTests.cpp"
 		"TestDataFile.cpp"
 		"TestDataFile.hpp"
 		${COMMON_SRC}
