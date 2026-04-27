@@ -198,6 +198,16 @@ namespace
 #endif
     }
 
+    static inline __mmask8 unsigned_lt_epu64_mask( __m512i a, __m512i b )
+    {
+        // Unsigned compare a < b using a sign-bit bias transform:
+        // unsigned(a) < unsigned(b)  <=>  signed(a^MSB) < signed(b^MSB)
+        const __m512i bias = _mm512_set1_epi64( 0x8000000000000000ULL );
+        __m512i ax = _mm512_xor_si512( a, bias );
+        __m512i bx = _mm512_xor_si512( b, bias );
+        return _mm512_cmplt_epi64_mask( ax, bx );
+    }
+
     mp_limb_t
         mpn_add_n_avx512_carry_select( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n )
     {
