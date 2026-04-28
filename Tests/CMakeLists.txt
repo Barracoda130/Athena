@@ -10,6 +10,7 @@ add_executable(Catch2Sandbox)
 target_sources(Tests
 	PRIVATE
 		"RunTests.cpp"
+       "EdgeTests.cpp"
 		"TestDataFile.cpp"
 		"TestDataFile.hpp"
 		${COMMON_SRC}
