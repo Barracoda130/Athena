@@ -135,8 +135,6 @@ namespace Athena
 		return *this;
 	}
 
-// Private
-
 // Friend 
 	std::ostream& operator<<( std::ostream& os, const Number& a_Num )
 	{

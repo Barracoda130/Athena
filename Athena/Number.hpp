@@ -72,8 +72,6 @@ namespace Athena
 	void mul( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round );
 	void div( Number& a_Result, const Number& a_Num1, const Number& a_Num2, round_t a_Round );
 
-	// Benchmark function for comparing add_n implementations
-	//void benchmark_add_n_implementations( size_t limbCount = 100, size_t iterations = 10000 );
 
 	// Namespace-scope declaration for the stream operator
 	std::ostream& operator<<( std::ostream& os, const Number& a_Num );

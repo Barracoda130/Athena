@@ -8,14 +8,6 @@
 #include <immintrin.h>
 #endif
 
-// Each number refers to a different implementation of the add_n function
-// 0 for the original implementation 
-// 1 for the intrinsic implementation 
-// 2 for the intrinsic implementation with ADX instructions
-
-#define MATH_INTRINSIC_VERSION 3
-
-
 namespace
 {
     mp_limb_t atn_add_n_original( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n );
@@ -23,8 +15,8 @@ namespace
     mp_limb_t atn_add_n_intrinsic_adx( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n );
     mp_limb_t atn_sub_n_original( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n );
     mp_limb_t atn_sub_n_intrinsic( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n );
-    mp_limb_t atn_sub_n_intrinsic_adx( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n );
 
+    // The original implementation taken directly from the GMP library
     mp_limb_t atn_add_n_original( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n )
     {
         mp_limb_t ul, vl, sl, rl, cy, cy1, cy2;
@@ -46,9 +38,11 @@ namespace
         return cy;
     }
 
+	// The intrinsic-based implementation using _addcarry_u64 or _addcarry_u32 on MSVC, and __builtin_add_overflow on GCC/Clang.
     mp_limb_t atn_add_n_intrinsic( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n )
     {
 
+		// Guard to detect compiler support for intrinsics. If not supported, fall back to the original implementation.
 #if defined(_MSC_VER)
         unsigned char carry = 0;
 
@@ -57,6 +51,7 @@ namespace
         auto* u = reinterpret_cast<const unsigned __int64*>(up);
         auto* v = reinterpret_cast<const unsigned __int64*>(vp);
 
+		// Unroll the loop to process 4 limbs at a time, which can help reduce loop overhead and increase instruction-level parallelism.
         while ( n >= 4 )
         {
             carry = _addcarry_u64( carry, u[0], v[0], &r[0] );
@@ -65,10 +60,13 @@ namespace
             carry = _addcarry_u64( carry, u[3], v[3], &r[3] );
             u += 4; v += 4; r += 4; n -= 4;
         }
+
+		// Handle any remaining limbs that didn't fit into the unrolled loop.
         while ( n-- > 0 )
             carry = _addcarry_u64( carry, *u++, *v++, r++ );
 
 #elif GMP_NUMB_BITS == 32
+		// If we're on a 32-bit platform, we can use the 32-bit intrinsics instead. The logic is the same, just with 32-bit types.
         auto* r = reinterpret_cast<unsigned int*>(rp);
         auto* u = reinterpret_cast<const unsigned int*>(up);
         auto* v = reinterpret_cast<const unsigned int*>(vp);
@@ -85,6 +83,8 @@ namespace
             carry = _addcarry_u32( carry, *u++, *v++, r++ );
 
 #else
+		// If we don't have access to the appropriate intrinsics, 
+        // we can still use the original logic but with a more compact loop structure.
         mp_limb_t ul, vl, sl, rl, cy, cy1, cy2;
         cy = 0;
         mp_size_t i = 0;
@@ -106,11 +106,15 @@ namespace
         return static_cast<mp_limb_t>(carry);
 #elif defined(__GNUC__) || defined(__clang__)
         mp_limb_t carry = 0;
+
+		// Unroll the loop to process 4 limbs at a time, which can help reduce loop overhead and increase instruction-level parallelism.
         while ( n >= 4 )
         {
             mp_limb_t sum;
+            // Two operations required as doesn't include carry in the instruction
             unsigned char c1 = __builtin_add_overflow( up[0], vp[0], &sum );
             unsigned char c2 = __builtin_add_overflow( sum, carry, &rp[0] );
+			// If either overflowed, we have a carry for the next limb
             carry = c1 | c2;
 
             c1 = __builtin_add_overflow( up[1], vp[1], &sum );
@@ -127,6 +131,8 @@ namespace
 
             up += 4; vp += 4; rp += 4; n -= 4;
         }
+
+		// Handle any remaining limbs that didn't fit into the unrolled loop.
         while ( n-- > 0 )
         {
             mp_limb_t sum;
@@ -137,6 +143,7 @@ namespace
         }
         return carry;
 #else
+        // If we don't have access to the appropriate intrinsics, we can still use the original logic
         mp_limb_t ul, vl, sl, rl, cy, cy1, cy2;
         cy = 0;
         do
@@ -154,17 +161,19 @@ namespace
 #endif
     }
 
+	// An alternative implementation which uses the _addcarryx_u64 intrinsic on supported platforms
     mp_limb_t atn_add_n_intrinsic_adx( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n )
     {
-
+		// Guard to detect compiler support for ADX intrinsics. If not supported, fall back to the non-ADX intrinsic implementation.
 #if defined(_MSC_VER)
         unsigned char carry = 0;
-
+        
 #if GMP_NUMB_BITS == 64
         auto* r = reinterpret_cast<unsigned __int64*>(rp);
         auto* u = reinterpret_cast<const unsigned __int64*>(up);
         auto* v = reinterpret_cast<const unsigned __int64*>(vp);
 
+		// Unroll the loop to process 4 limbs at a time, which can help reduce loop overhead and increase instruction-level parallelism.
         while ( n >= 4 )
         {
             carry = _addcarryx_u64( carry, u[0], v[0], &r[0] );
@@ -173,9 +182,13 @@ namespace
             carry = _addcarryx_u64( carry, u[3], v[3], &r[3] );
             u += 4; v += 4; r += 4; n -= 4;
         }
+        
+		// Handle any remaining limbs that didn't fit into the unrolled loop.
         while ( n-- > 0 )
             carry = _addcarryx_u64( carry, *u++, *v++, r++ );
+
 #elif GMP_NUMB_BITS == 32
+		// On 32-bit platforms, we can use the 32-bit version of the ADX intrinsics. The logic is the same, just with 32-bit types.
         auto* r = reinterpret_cast<unsigned int*>(rp);
         auto* u = reinterpret_cast<const unsigned int*>(up);
         auto* v = reinterpret_cast<const unsigned int*>(vp);
@@ -196,20 +209,22 @@ namespace
 
         return static_cast<mp_limb_t>(carry);
 #else
+		// Fall back to the non-ADX intrinsic implementation if we're not on MSVC or don't have access to the ADX intrinsics.
+		// This also includes the deafault GMP implementation for platforms that don't support intrinsics at all.
         return atn_add_n_intrinsic( rp, up, vp, n );
 #endif
     }
 
     static inline __mmask8 unsigned_lt_epu64_mask( __m512i a, __m512i b )
     {
-        // Unsigned compare a < b using a sign-bit bias transform:
-        // unsigned(a) < unsigned(b)  <=>  signed(a^MSB) < signed(b^MSB)
+        // Unsigned compare a < b using a sign-bit bias transform
         const __m512i bias = _mm512_set1_epi64( 0x8000000000000000ULL );
         __m512i ax = _mm512_xor_si512( a, bias );
         __m512i bx = _mm512_xor_si512( b, bias );
         return _mm512_cmplt_epi64_mask( ax, bx );
     }
 
+	// An AVX-512 implementation of add_n using carry-select. This processes 8 limbs at a time, and uses a small scalar prefix pass to resolve carries across the vector lanes.
     mp_limb_t
         mpn_add_n_avx512_carry_select( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n )
     {
@@ -238,17 +253,10 @@ namespace
             // g[i] = 1 iff u[i] + v[i] overflows 64 bits
             __mmask8 gmask = unsigned_lt_epu64_mask( s0, vu );
 
-            // Propagate mask:
-            // p[i] = 1 iff an incoming carry passes through this limb
-            // For a single 64-bit limb this means s0 == 0xFFFFFFFFFFFFFFFF.
+            // Propagate mask
             __mmask8 pmask = _mm512_cmpeq_epi64_mask( s0, all_ones );
 
-            // Resolve the true carry-in for each lane with a tiny scalar prefix pass.
-            //
-            // cin[i] is the actual carry entering lane i.
-            // cout[i] = g[i] | (p[i] & cin[i])
-            //
-            // Lane 0 gets the incoming block carry from the previous block.
+            // Resolve the real per-lane carry chain.
             std::uint8_t g = static_cast<std::uint8_t>(gmask);
             std::uint8_t p = static_cast<std::uint8_t>(pmask);
 
@@ -257,11 +265,15 @@ namespace
 
             for ( int i = 0; i < 8; ++i )
             {
+                // If current carry-in is 1, mark lane i to pick s1[i] later.
                 if ( c )
                     cin_mask |= static_cast<std::uint8_t>( 1u << i );
 
+                // Extract lane i generate/propagate bits from packed masks.
                 std::uint8_t gi = (g >> i) & 1u;
                 std::uint8_t pi = (p >> i) & 1u;
+
+                // Advance carry to feed next lane: c becomes cout[i].
                 c = static_cast<std::uint8_t>( gi | (pi & c) );
             }
 
@@ -296,6 +308,7 @@ namespace
      * Subtraction
      ****************************************************************************/
 
+	 // Original implementation taken directly from the GMP library
     mp_limb_t
         atn_sub_n_original( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n )
     {
@@ -317,8 +330,10 @@ namespace
         return cy;
     }
 
+	// The intrinsic-based implementation using _subborrow_u64 or _subborrow_u32 on MSVC, and __builtin_sub_overflow on GCC/Clang.
     mp_limb_t atn_sub_n_intrinsic( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n )
     {
+		// Guard to detect compiler support for intrinsics. If not supported, fall back to the original implementation.
 #if defined(_MSC_VER)
         unsigned char borrow = 0;
 
@@ -327,6 +342,7 @@ namespace
         auto* u = reinterpret_cast<const unsigned __int64*>(up);
         auto* v = reinterpret_cast<const unsigned __int64*>(vp);
 
+		// Unroll the loop to process 4 limbs at a time, which can help reduce loop overhead and increase instruction-level parallelism.
         while ( n >= 4 )
         {
             borrow = _subborrow_u64( borrow, u[0], v[0], &r[0] );
@@ -335,10 +351,13 @@ namespace
             borrow = _subborrow_u64( borrow, u[3], v[3], &r[3] );
             u += 4; v += 4; r += 4; n -= 4;
         }
+
+		// Handle any remaining limbs that didn't fit into the unrolled loop.
         while ( n-- > 0 )
             borrow = _subborrow_u64( borrow, *u++, *v++, r++ );
 
 #elif GMP_NUMB_BITS == 32
+		// On 32-bit platforms, we can use the 32-bit version of the intrinsics instead. The logic is the same, just with 32-bit types.
         auto* r = reinterpret_cast<unsigned int*>(rp);
         auto* u = reinterpret_cast<const unsigned int*>(up);
         auto* v = reinterpret_cast<const unsigned int*>(vp);
@@ -355,6 +374,7 @@ namespace
             borrow = _subborrow_u32( borrow, *u++, *v++, r++ );
 
 #else
+		// If we don't have access to the appropriate intrinsics, we can still use the original logic
         mp_limb_t ul, vl, sl, rl, cy, cy1, cy2;
         cy = 0;
         mp_size_t i = 0;
@@ -375,10 +395,12 @@ namespace
 
         return static_cast<mp_limb_t>( borrow );
 #elif defined(__GNUC__) || defined(__clang__)
+		// Unroll the loop to process 4 limbs at a time, which can help reduce loop overhead and increase instruction-level parallelism.
         mp_limb_t borrow = 0;
         while ( n >= 4 )
         {
             mp_limb_t diff;
+			// Two operations required as doesn't include borrow in the instruction
             unsigned char b1 = __builtin_sub_overflow( up[0], vp[0], &diff );
             unsigned char b2 = __builtin_sub_overflow( diff, borrow, &rp[0] );
             borrow = b1 | b2;
@@ -397,6 +419,8 @@ namespace
 
             up += 4; vp += 4; rp += 4; n -= 4;
         }
+
+		// Handle any remaining limbs that didn't fit into the unrolled loop.
         while ( n-- > 0 )
         {
             mp_limb_t diff;
@@ -407,6 +431,7 @@ namespace
         }
         return borrow;
 #else
+		// If we don't have access to the appropriate intrinsics, we can still use the original logic
         mp_limb_t ul, vl, sl, rl, cy, cy1, cy2;
         cy = 0;
         do
@@ -421,52 +446,6 @@ namespace
             *rp++ = rl;
         } while ( --n != 0 );
         return cy;
-#endif
-    }
-
-    mp_limb_t atn_sub_n_intrinsic_adx( mp_ptr rp, mp_srcptr up, mp_srcptr vp, mp_size_t n )
-    {
-#if defined(_MSC_VER)
-        unsigned char borrow = 0;
-
-#if GMP_NUMB_BITS == 64
-        auto* r = reinterpret_cast<unsigned __int64*>(rp);
-        auto* u = reinterpret_cast<const unsigned __int64*>(up);
-        auto* v = reinterpret_cast<const unsigned __int64*>(vp);
-
-        while ( n >= 4 )
-        {
-            borrow = _subborrow_u64( borrow, u[0], v[0], &r[0] );
-            borrow = _subborrow_u64( borrow, u[1], v[1], &r[1] );
-            borrow = _subborrow_u64( borrow, u[2], v[2], &r[2] );
-            borrow = _subborrow_u64( borrow, u[3], v[3], &r[3] );
-            u += 4; v += 4; r += 4; n -= 4;
-        }
-        while ( n-- > 0 )
-            borrow = _subborrow_u64( borrow, *u++, *v++, r++ );
-
-#elif GMP_NUMB_BITS == 32
-        auto* r = reinterpret_cast<unsigned int*>(rp);
-        auto* u = reinterpret_cast<const unsigned int*>(up);
-        auto* v = reinterpret_cast<const unsigned int*>(vp);
-
-        while ( n >= 4 )
-        {
-            borrow = _subborrow_u32( borrow, u[0], v[0], &r[0] );
-            borrow = _subborrow_u32( borrow, u[1], v[1], &r[1] );
-            borrow = _subborrow_u32( borrow, u[2], v[2], &r[2] );
-            borrow = _subborrow_u32( borrow, u[3], v[3], &r[3] );
-            u += 4; v += 4; r += 4; n -= 4;
-        }
-        while ( n-- > 0 )
-            borrow = _subborrow_u32( borrow, *u++, *v++, r++ );
-#else
-        return atn_sub_n_intrinsic( rp, up, vp, n );
-#endif
-
-        return static_cast<mp_limb_t>( borrow );
-#else
-        return atn_sub_n_intrinsic( rp, up, vp, n );
 #endif
     }
 
@@ -495,10 +474,10 @@ namespace Athena
         return atn_add_n_original( rp, up, vp, n );
 #elif MATH_INTRINSIC_VERSION == 1
         return atn_add_n_intrinsic( rp, up, vp, n );
-#elif MATH_INTRINSIC_VERSION == 3
-        return mpn_add_n_avx512_carry_select( rp, up, vp, n );
 #elif MATH_INTRINSIC_VERSION == 2
 		return atn_add_n_intrinsic_adx( rp, up, vp, n );
+#elif MATH_INTRINSIC_VERSION == 3
+        return mpn_add_n_avx512_carry_select( rp, up, vp, n );
 #else
         // Throw error
 #error "Invalid INTRINSIC_VERSION. Expected 0, 1, or 2."
@@ -509,12 +488,8 @@ namespace Athena
     {
 #if MATH_INTRINSIC_VERSION == 0
         return atn_sub_n_original( rp, up, vp, n );
-#elif MATH_INTRINSIC_VERSION == 1
+#elif MATH_INTRINSIC_VERSION > 1
         return atn_sub_n_intrinsic( rp, up, vp, n );
-#elif MATH_INTRINSIC_VERSION == 2 || MATH_INTRINSIC_VERSION == 3
-        return atn_sub_n_intrinsic_adx( rp, up, vp, n );
-#else
-#error "Invalid INTRINSIC_VERSION. Expected 0, 1, 2, or 3."
 #endif
     }
 }

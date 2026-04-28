@@ -1,3 +1,6 @@
+// ALL CODE IN THE FOLLOWING FILE WAS COPIED FROM MPFR 4.2.0, WHICH IS LICENSED UNDER THE GNU LGPL, VERSION 3 OR LATER.
+// Below is the original copyright notice from the MPFR library, which applies to this file.
+
 /* MPFR internal header related to Static Assertions
 
 Copyright 2012-2025 Free Software Foundation, Inc.

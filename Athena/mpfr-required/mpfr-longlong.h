@@ -1,3 +1,6 @@
+// ALL CODE IN THE FOLLOWING FILE WAS COPIED FROM MPFR 4.2.0, WHICH IS LICENSED UNDER THE GNU LGPL, VERSION 3 OR LATER.
+// Below is the original copyright notice from the MPFR library, which applies to this file.
+
 /* longlong.h -- definitions for mixed size 32/64 bit arithmetic.
 
 Copyright 1991, 1992, 1993, 1994, 1996, 1997, 1999, 2000, 2001, 2002, 2003,

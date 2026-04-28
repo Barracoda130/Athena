@@ -2,11 +2,13 @@
 
 #include <random>
 
+// Generate a random integer between a_Low and a_High (inclusive)
 int randInt( int a_Low, int a_High )
 {
 	return (std::rand() % (a_High + 1 - a_Low)) + a_Low;
 }
 
+// Generate a random integer with a_Length digits
 void generateInt( std::size_t a_Length, char* result )
 {
 	for ( index_t i = 0; i < a_Length; i++ )
@@ -16,9 +18,11 @@ void generateInt( std::size_t a_Length, char* result )
 	result[a_Length] = '\0';
 }
 
-// Generate a float between a_Min and a_Max
+// Generate a random float with a_Length digits. Store the result in result 
+// The decimal point is randomly placed within the number, but not at the end
 void generateFloat( std::size_t a_Length, char* result )
 {
+	// Pick a random location for the decimal point
 	int decimalPointIdx = randInt( 0, static_cast<int>( a_Length ) - 2 );
 	index_t startIdx = 0;
 
