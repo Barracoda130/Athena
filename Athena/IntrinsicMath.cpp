@@ -12,7 +12,9 @@
 // 0 for the original implementation 
 // 1 for the intrinsic implementation 
 // 2 for the intrinsic implementation with ADX instructions
+
 #define MATH_INTRINSIC_VERSION 3
+
 
 namespace
 {
