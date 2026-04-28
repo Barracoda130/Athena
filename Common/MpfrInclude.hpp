@@ -1,5 +1,7 @@
 #pragma once
 
+// Suppress warnings from mpfr.h, which is a C library and may have some constructs that trigger warnings in C++
+
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable:4146)

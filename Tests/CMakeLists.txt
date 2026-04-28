@@ -5,7 +5,6 @@ find_package(Catch2 CONFIG REQUIRED)
 
 # Add source to this project's executable.
 add_executable(Tests)
-add_executable(Catch2Sandbox)
 
 target_sources(Tests
 	PRIVATE
@@ -16,21 +15,14 @@ target_sources(Tests
 		${COMMON_SRC}
         ${COMMON_HDR} )
 
-target_sources(Catch2Sandbox
-	PRIVATE
-		"RunCatch2.cpp")
-
 target_include_directories(Tests PRIVATE ${CMAKE_SOURCE_DIR}/Common)
 
 target_link_libraries(Tests PRIVATE PkgConfig::mpfr)
 target_link_libraries(Tests PRIVATE Catch2::Catch2WithMain)
 target_link_libraries(Tests PRIVATE Athena)
 
-target_link_libraries(Catch2Sandbox PRIVATE Catch2::Catch2WithMain)
-
 if(MSVC)
   target_compile_options(Tests PRIVATE /FAcs /Fa${CMAKE_CURRENT_BINARY_DIR}/)
-  target_compile_options(Catch2Sandbox PRIVATE /FAcs /Fa${CMAKE_CURRENT_BINARY_DIR}/)
 endif()
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)

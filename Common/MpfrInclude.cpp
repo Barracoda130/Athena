@@ -3,6 +3,7 @@
 #include <iostream>
 #include <format>
 
+// Method to allow the easy printing of the mpfr type using C++ streams. This is used for testing and debugging purposes.
 std::ostream& operator<<( std::ostream& os, mpfr_srcptr a_Num )
 {
 	if ( a_Num == nullptr )

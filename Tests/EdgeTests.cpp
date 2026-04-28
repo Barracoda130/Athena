@@ -8,6 +8,7 @@ namespace
     using AthenaBinaryFunction = void ( * )( Athena::Number&, const Athena::Number&, const Athena::Number&, Athena::round_t );
     using MpfrBinaryFunction = int ( * )( mpfr_ptr, mpfr_srcptr, mpfr_srcptr, mpfr_rnd_t );
 
+	// Helper function to compare the result of an Athena binary operation with the corresponding MPFR operation
     void requireMatchesMpfr(
         const char* lhs,
         const char* rhs,
