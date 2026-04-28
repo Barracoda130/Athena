@@ -3,7 +3,8 @@
 #include <iostream>
 #include <stdio.h>
 
-
+// This is a sandbox for testing out the Athena library and its functionality. It is not meant to be a comprehensive test suite, but rather a place to quickly test out ideas and see how the library works.
+// The code in here has no real structure or organization, and is not meant to be used as a reference for how to use the library. It is simply a place to play around with the library and see how it works.
 
 void atnThings()
 {

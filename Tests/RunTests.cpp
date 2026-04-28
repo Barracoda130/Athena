@@ -14,7 +14,8 @@
 #define TEST_PRECISION 512
 #define NUM_TESTS 10000
 
-
+// Convert MPFR type to string - only designed to be used to test result against long long results, so only handles base 10 and doesn't handle padding with 0s for negative exponents
+// This is no longer used in the testing stuies, but is left here for reference and potential future use
 static std::string mpfr_tToStr( mpfr_t a_Num )
 {
 
@@ -70,12 +71,16 @@ static std::string mpfr_tToStr( mpfr_t a_Num )
 	return result;
 }
 
+// Run a test comparing the result of an MPFR operation with the result of an Athena operation for a set of test data read from a file
 void runTest( TestData::FileReader& a_File,
 			  std::function<void( mpfr_t, mpfr_t, mpfr_t, mpfr_rnd_t )> a_F1,
 			  std::function<void( Athena::Number&, const Athena::Number&, const Athena::Number&, Athena::round_t )> a_F2 )
 {
+	// Get the first numbers to test
 	const char* n1 = a_File.getNextA();
 	const char* n2 = a_File.getNextB();
+
+	// While the file has not reached the end, run the test for each pair of numbers
 	while ( !a_File.eofReached() )
 	{
 		// Run through MPFR
@@ -89,18 +94,21 @@ void runTest( TestData::FileReader& a_File,
 		mpfr_set_str( num1, n1, 10, MPFR_RNDN );
 		mpfr_set_str( num2, n2, 10, MPFR_RNDN );
 
+		// Run the function for mpfr
 		a_F1( mpfrResult, num1, num2, MPFR_RNDD );
 
 		Athena::Number n1Atna( n1, TEST_PRECISION );
 		Athena::Number n2Atna( n2, TEST_PRECISION );
 		Athena::Number resultAtna( TEST_PRECISION );
 
+		// Run the function for Athena
 		a_F2( resultAtna, n1Atna, n2Atna, MPFR_RNDD );
 
 		if ( resultAtna == Athena::Number( mpfrResult, MPFR_RNDN ) )
 			SUCCEED();
 		else
 		{
+			// The default printing for this library doesn't work so we need to print the numbers manually here to get useful output for debugging
 			INFO( std::format( "{}\n{}\nMPFR: {}\n ATNA: {}", 
 				Athena::Number(n1, TEST_PRECISION ).str(),
 				Athena::Number(n2, TEST_PRECISION ).str(),
@@ -109,11 +117,13 @@ void runTest( TestData::FileReader& a_File,
 			FAIL();
 		}
 
+		// Get the next numbers to test
 		n1 = a_File.getNextA();
 		n2 = a_File.getNextB();
 	}
 }
 	
+// Run a test comparing the result of an mpfr operatino with the result of a long long operation
 void runTest( TestData::FileReader & a_File,
 				std::function<void( mpfr_t, mpfr_t, mpfr_t, mpfr_rnd_t )> a_F1,
 				std::function<long long( long long, long long )> a_F2 )
