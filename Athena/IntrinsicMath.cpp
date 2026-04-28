@@ -12,7 +12,7 @@
 // 0 for the original implementation 
 // 1 for the intrinsic implementation 
 // 2 for the intrinsic implementation with ADX instructions
-#define MATH_INTRINSIC_VERSION 2
+#define MATH_INTRINSIC_VERSION 3
 
 namespace
 {
@@ -481,6 +481,8 @@ namespace Athena
             "intrinsic"
 #elif MATH_INTRINSIC_VERSION == 2
             "intrinsic_adx"
+#elif MATH_INTRINSIC_VERSION == 3
+			"intrinsic_avx512_carry_select"
 #endif
             << std::endl;
     }
@@ -491,8 +493,10 @@ namespace Athena
         return atn_add_n_original( rp, up, vp, n );
 #elif MATH_INTRINSIC_VERSION == 1
         return atn_add_n_intrinsic( rp, up, vp, n );
-#elif MATH_INTRINSIC_VERSION == 2
+#elif MATH_INTRINSIC_VERSION == 3
         return mpn_add_n_avx512_carry_select( rp, up, vp, n );
+#elif MATH_INTRINSIC_VERSION == 2
+		return atn_add_n_intrinsic_adx( rp, up, vp, n );
 #else
         // Throw error
 #error "Invalid INTRINSIC_VERSION. Expected 0, 1, or 2."
@@ -505,10 +509,10 @@ namespace Athena
         return atn_sub_n_original( rp, up, vp, n );
 #elif MATH_INTRINSIC_VERSION == 1
         return atn_sub_n_intrinsic( rp, up, vp, n );
-#elif MATH_INTRINSIC_VERSION == 2
+#elif MATH_INTRINSIC_VERSION == 2 || MATH_INTRINSIC_VERSION == 3
         return atn_sub_n_intrinsic_adx( rp, up, vp, n );
 #else
-#error "Invalid INTRINSIC_VERSION. Expected 0, 1, or 2."
+#error "Invalid INTRINSIC_VERSION. Expected 0, 1, 2, or 3."
 #endif
     }
 }
