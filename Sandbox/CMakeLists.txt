@@ -20,6 +20,10 @@ target_include_directories(Sandbox PRIVATE ${CMAKE_SOURCE_DIR}/Common)
 target_link_libraries(Sandbox PRIVATE PkgConfig::mpfr)
 target_link_libraries(Sandbox PRIVATE Athena)
 
+if(MSVC)
+  target_compile_options(Sandbox PRIVATE /FAcs /Fa${CMAKE_CURRENT_BINARY_DIR}/)
+endif()
+
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET Sandbox PROPERTY CXX_STANDARD 20)
 endif()

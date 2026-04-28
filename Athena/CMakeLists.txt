@@ -37,3 +37,7 @@ target_include_directories(Athena PRIVATE ${CMAKE_SOURCE_DIR}/Common)
 target_include_directories(Athena PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/mpfr-required")
 
 target_link_libraries(Athena PRIVATE PkgConfig::mpfr)
+
+if(MSVC)
+    target_compile_options(Athena PRIVATE /FAcs /Fa${CMAKE_CURRENT_BINARY_DIR}/)
+endif()
